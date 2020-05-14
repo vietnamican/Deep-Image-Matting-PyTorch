@@ -6,3 +6,5 @@ nohup.out
 runs/
 train_names.txt
 valid_names.txt
+data/
+alphamatting/
