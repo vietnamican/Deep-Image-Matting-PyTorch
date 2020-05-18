@@ -49,8 +49,6 @@ def train_net(index, args):
     model = model.to(device)
 
     # Custom dataloaders
-    if xm.is_master_ordinal():
-        xm.rendezvous("init")
     train_dataset = DIMDataset('train')
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8)
     valid_dataset = DIMDataset('valid')
@@ -111,7 +109,8 @@ def train(train_loader, model, optimizer, epoch, logger, device):
     losses = AverageMeter()
     with torch.no_grad():
         para_train_loader = pl.ParallelLoader(train_loader, [device]).per_device_loader(device)
-        for i, (img, alpha_label) in enumerate(para_train_loader):
+        for i, batch in enumerate(para_train_loader):
+            img, alpha_label = batch
     # # Batches
     # for i, (img, alpha_label) in enumerate(train_loader):
             # Move to GPU, if available
@@ -157,7 +156,8 @@ def valid(valid_loader, model, logger, device):
 
     with torch.no_grad():
         para_valid_loader = pl.ParallelLoader(valid_loader, [device]).per_device_loader(device)
-        for i, (img, alpha_label) in enumerate(para_valid_loader):
+        for i, batch in enumerate(para_valid_loader):
+            img, alpha_label = batch
     # # Batches
     # for img, alpha_label in valid_loader:
             # Move to GPU, if available
