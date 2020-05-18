@@ -9,7 +9,7 @@ import torch_xla.distributed.xla_multiprocessing as xmp
 import torch_xla.distributed.parallel_loader as pl
 
 from config import im_size, grad_clip, print_freq
-from data_gen import DIMDataset
+from data_gen_2 import DIMDataset
 from models_v16 import DIMModel
 from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
     alpha_prediction_loss, adjust_learning_rate
@@ -37,7 +37,7 @@ def train_net(index, args):
             optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     else:
-        checkpoint = torch.load(checkpoint)
+        checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))
         start_epoch = checkpoint['epoch'] + 1
         epochs_since_improvement = checkpoint['epochs_since_improvement']
         model = checkpoint['model'].module
