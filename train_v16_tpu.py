@@ -21,7 +21,7 @@ def train_net(index, args):
     checkpoint = args.checkpoint
     start_epoch = 0
     best_loss = float('inf')
-    writer = SummaryWriter()
+    # writer = SummaryWriter()
     epochs_since_improvement = 0
     decays_since_improvement = 0
 
@@ -78,8 +78,8 @@ def train_net(index, args):
         effective_lr = get_learning_rate(optimizer)
         print('Current effective learning rate: {}\n'.format(effective_lr))
 
-        writer.add_scalar('Train_Loss', train_loss, epoch)
-        writer.add_scalar('Learning_Rate', effective_lr, epoch)
+        # writer.add_scalar('Train_Loss', train_loss, epoch)
+        # writer.add_scalar('Learning_Rate', effective_lr, epoch)
 
         # One epoch's validation
         valid_loss = valid(valid_loader=valid_loader,
@@ -87,7 +87,7 @@ def train_net(index, args):
                            logger=logger,
                            device=device)
 
-        writer.add_scalar('Valid_Loss', valid_loss, epoch)
+        # writer.add_scalar('Valid_Loss', valid_loss, epoch)
 
         # Check if there was an improvement
         is_best = valid_loss < best_loss
