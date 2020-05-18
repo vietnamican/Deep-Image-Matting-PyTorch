@@ -12,7 +12,7 @@ from config import device
 
 def migrate(new_model):
     # print(new_model)
-    checkpoint = 'BEST_checkpoint.tar'
+    checkpoint = 'BEST_checkpoint_older.tar'
     checkpoint = torch.load(checkpoint)
     old_model = checkpoint['model'].module
     # print(dict(old_model.named_parameters()))
