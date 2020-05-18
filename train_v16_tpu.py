@@ -40,7 +40,7 @@ def train_net(index, args):
         checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))
         start_epoch = checkpoint['epoch'] + 1
         epochs_since_improvement = checkpoint['epochs_since_improvement']
-        model = checkpoint['model'].module
+        model = checkpoint['model']
         optimizer = checkpoint['optimizer']
 
     logger = get_logger()
