@@ -109,41 +109,43 @@ def train(train_loader, model, optimizer, epoch, logger, device):
     model.train()  # train mode (dropout and batchnorm is used)
 
     losses = AverageMeter()
+    with torch.no_grad():
+        para_train_loader = pl.ParallelLoader(train_loader, [device]).per_device_loader(device)
+        for i, (img, alpha_label) in enumerate(para_train_loader):
+    # # Batches
+    # for i, (img, alpha_label) in enumerate(train_loader):
+            # Move to GPU, if available
+            img = img.type(torch.FloatTensor).to(device)  # [N, 4, 320, 320]
+            alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 320, 320]
+            alpha_label = alpha_label.reshape((-1, 2, im_size * im_size))  # [N, 320*320]
 
-    # Batches
-    for i, (img, alpha_label) in enumerate(train_loader):
-        # Move to GPU, if available
-        img = img.type(torch.FloatTensor).to(device)  # [N, 4, 320, 320]
-        alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 320, 320]
-        alpha_label = alpha_label.reshape((-1, 2, im_size * im_size))  # [N, 320*320]
+            # Forward prop.
+            alpha_out = model(img)  # [N, 3, 320, 320]
+            alpha_out = alpha_out.reshape((-1, 1, im_size * im_size))  # [N, 320*320]
 
-        # Forward prop.
-        alpha_out = model(img)  # [N, 3, 320, 320]
-        alpha_out = alpha_out.reshape((-1, 1, im_size * im_size))  # [N, 320*320]
+            # Calculate loss
+            # loss = criterion(alpha_out, alpha_label)
+            loss = alpha_prediction_loss(alpha_out, alpha_label)
 
-        # Calculate loss
-        # loss = criterion(alpha_out, alpha_label)
-        loss = alpha_prediction_loss(alpha_out, alpha_label)
+            # Back prop.
+            optimizer.zero_grad()
+            loss.backward()
 
-        # Back prop.
-        optimizer.zero_grad()
-        loss.backward()
+            # Clip gradients
+            clip_gradient(optimizer, grad_clip)
 
-        # Clip gradients
-        clip_gradient(optimizer, grad_clip)
+            # Update weights
+            optimizer.step()
 
-        # Update weights
-        optimizer.step()
+            # Keep track of metrics
+            losses.update(loss.item())
 
-        # Keep track of metrics
-        losses.update(loss.item())
+            # Print status
 
-        # Print status
-
-        if i % print_freq == 0:
-            status = 'Epoch: [{0}][{1}/{2}]\t' \
-                     'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i, len(train_loader), loss=losses)
-            logger.info(status)
+            if i % print_freq == 0:
+                status = 'Epoch: [{0}][{1}/{2}]\t' \
+                        'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i, len(train_loader), loss=losses)
+                logger.info(status)
 
     return losses.avg
 
@@ -153,23 +155,26 @@ def valid(valid_loader, model, logger, device):
 
     losses = AverageMeter()
 
-    # Batches
-    for img, alpha_label in valid_loader:
-        # Move to GPU, if available
-        img = img.type(torch.FloatTensor).to(device)  # [N, 3, 320, 320]
-        alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 320, 320]
-        alpha_label = alpha_label.reshape((-1, 2, im_size * im_size))  # [N, 320*320]
+    with torch.no_grad():
+        para_valid_loader = pl.ParallelLoader(valid_loader, [device]).per_device_loader(device)
+        for i, (img, alpha_label) in enumerate(para_valid_loader):
+    # # Batches
+    # for img, alpha_label in valid_loader:
+            # Move to GPU, if available
+            img = img.type(torch.FloatTensor).to(device)  # [N, 3, 320, 320]
+            alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 320, 320]
+            alpha_label = alpha_label.reshape((-1, 2, im_size * im_size))  # [N, 320*320]
 
-        # Forward prop.
-        alpha_out = model(img)  # [N, 320, 320]
-        alpha_out = alpha_out.reshape((-1, 1, im_size * im_size))  # [N, 320*320]
+            # Forward prop.
+            alpha_out = model(img)  # [N, 320, 320]
+            alpha_out = alpha_out.reshape((-1, 1, im_size * im_size))  # [N, 320*320]
 
-        # Calculate loss
-        # loss = criterion(alpha_out, alpha_label)
-        loss = alpha_prediction_loss(alpha_out, alpha_label)
+            # Calculate loss
+            # loss = criterion(alpha_out, alpha_label)
+            loss = alpha_prediction_loss(alpha_out, alpha_label)
 
-        # Keep track of metrics
-        losses.update(loss.item())
+            # Keep track of metrics
+            losses.update(loss.item())
 
     # Print status
     status = 'Validation: Loss {loss.avg:.4f}\n'.format(loss=losses)
