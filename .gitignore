@@ -8,3 +8,5 @@ train_names.txt
 valid_names.txt
 data/
 alphamatting/
+BEST_checkpoint_older.tar
+reruns/
