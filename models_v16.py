@@ -191,7 +191,7 @@ class DIMModel(nn.Module):
             # import torchvision.models as models
             # vgg16 = models.vgg16()
             # print(vgg16)
-        self.init_vgg16_params()
+        # self.init_vgg16_params()
 
     def forward(self, inputs):
         # inputs: [N, 4, 320, 320]
@@ -217,9 +217,9 @@ class DIMModel(nn.Module):
 
         return x
 
-    def init_vgg16_params(self):
+    # def init_vgg16_params(self):
         # return
-        migrate_model.migrate(self)
+        # migrate_model.migrate(self)
 
 
 if __name__ == '__main__':
