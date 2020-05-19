@@ -30,7 +30,7 @@ def train_net(args):
                                         weight_decay=args.weight_decay)
         else:
             optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-
+        start_epoch = args.start_epoch
     else:
         checkpoint = torch.load(checkpoint)
         start_epoch = checkpoint['epoch'] + 1
