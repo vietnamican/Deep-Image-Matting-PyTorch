@@ -4,9 +4,9 @@ from tensorboardX import SummaryWriter
 from torch import nn
 
 from config import device, im_size, grad_clip, print_freq
-from data_gen_2 import DIMDataset
+from data_gen_3 import DIMDataset
 from models_v16 import DIMModel
-from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
+from utils import parse_args, save_checkpoint_2, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
     alpha_prediction_loss, adjust_learning_rate
 from migrate_model import migrate
 
@@ -96,7 +96,7 @@ def train_net(args):
             decays_since_improvement = 0
 
         # Save checkpoint
-        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best)
+        save_checkpoint_2(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best)
 
 
 def train(train_loader, model, optimizer, epoch, logger):

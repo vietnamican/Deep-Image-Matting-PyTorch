@@ -34,6 +34,19 @@ def save_checkpoint(epoch, epochs_since_improvement, model, optimizer, loss, is_
     if is_best:
         torch.save(state, 'BEST_checkpoint.tar')
 
+def save_checkpoint_2(epoch, epochs_since_improvement, model, optimizer, loss, is_best):
+    state = {'epoch': epoch,
+             'epochs_since_improvement': epochs_since_improvement,
+             'loss': loss,
+             'model': model,
+             'optimizer': optimizer}
+    filename = 'checkpoints_2/checkpoint_' + str(epoch) + '_' + str(loss) + '.tar'
+    # filename = 'checkpoint.tar'
+    torch.save(state, filename)
+    # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
+    if is_best:
+        torch.save(state, 'checkpoints_2/BEST_checkpoint.tar')
+
 
 class AverageMeter(object):
     """
@@ -94,6 +107,7 @@ def parse_args():
     parser.add_argument('--batch-size', type=int, default=32, help='batch size in each context')
     parser.add_argument('--checkpoint', type=str, default=None, help='checkpoint')
     parser.add_argument('--pretrained', type=bool, default=True, help='pretrained model')
+    parser.add_argument('--data-augumentation', type=bool, default=False, help='pretrained model')
     args = parser.parse_args()
     return args
 
@@ -159,3 +173,9 @@ def draw_str(dst, target, s):
 def ensure_folder(folder):
     if not os.path.exists(folder):
         os.makedirs(folder)
+
+interp_list = [cv.INTER_NEAREST, cv.INTER_LINEAR, cv.INTER_CUBIC, cv.INTER_LANCZOS4]
+def maybe_random_interp(cv2_interp):
+    if np.random.rand() < 0.5:
+        return np.random.choice(interp_list)
+    return cv2_interp
