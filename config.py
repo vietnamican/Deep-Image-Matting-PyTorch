@@ -12,6 +12,8 @@ num_train = 34480
 # num_samples - num_train_samples
 num_valid = 8620
 
+valid_ratio = 0.2
+
 # Training parameters
 num_workers = 1  # for data-loading; right now, only 1 works with h5py
 grad_clip = 5.  # clip gradients at an absolute value of

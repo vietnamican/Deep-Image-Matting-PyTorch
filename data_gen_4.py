@@ -10,11 +10,15 @@ from torchvision import transforms
 import tensorflow as tf
 
 import tfrecord_creator	
-from config import im_size, unknown_code, fg_path, bg_path, a_path, num_valid
+from config import im_size, unknown_code, fg_path, bg_path, a_path, num_valid, valid_ratio
 from utils import safe_crop, parse_args, maybe_random_interp
 
 global args
 args = parse_args()
+
+num_fgs = 431
+num_bgs_per_fg = 100
+num_bgs = num_fgs * num_bgs_per_fg
 
 # Data augmentation and normalization for training
 # Just normalization for validation
@@ -144,6 +148,8 @@ def gen_trimap(alpha):
 def random_choice(trimap, crop_size=(320, 320)):
     crop_height, crop_width = crop_size
     y_indices, x_indices = np.where(trimap == unknown_code)
+    # print(y_indices)
+    # print(x_indices)
     num_unknowns = len(y_indices)
     x, y = 0, 0
     if num_unknowns > 0:
@@ -154,41 +160,61 @@ def random_choice(trimap, crop_size=(320, 320)):
         y = max(0, center_y - int(crop_height / 2))
     return x, y
 
-
 class DIMDataset(Dataset):
     def __init__(self, split):
         self.split = split
 
-        filename = '{}_names.txt'.format(split)
-        with open(filename, 'r') as file:
-            self.names = file.read().splitlines()
+        names_train, names_valid = split_name()
+        if self.split == "train":
+            self.fgs = names_train
+        else:
+            self.fgs = names_valid
 
-        fgs = [int(name.split('.')[0].split('_')[0]) for name in self.names]
-        bgs = [int(name.split('.')[0].split('_')[1]) for name in self.names]
-        random.shuffle(fgs)
-        random.shuffle(bgs)
-        self.fgs = fgs
-        self.bgs = bgs
-        self.fg_num = np.unique(self.fgs).shape[0]
-        self.bg_num = np.unique(self.bgs).shape[0]
-        print(self.fg_num)
-        print(self.bg_num)
-
+        self.fg_num_unique = len(self.fgs)
+        self.fgs = np.repeat(self.fgs, args.batch_size * 16)
+        print(len(self.fgs))
+        self.fg_num = len(self.fgs)
+        
         self.transformer = data_transforms[split]
+
+        self.current_index = -1
+        self.current_fg = None
+        self.current_alpha = None
+        self.is_resize = False
 
     def __getitem__(self, i):
         fcount = self.fgs[i]
-        bcount = self.bgs[i]
-        img, alpha, fg, bg = process(fcount, bcount)
+
+        if i % args.batch_size == 0:
+            self.current_index = fcount
+            alpha = get_raw("a", fcount)
+            alpha = np.reshape(alpha, (alpha.shape[0], alpha.shape[1]))
+            fg = get_raw("fg", fcount)
+            if args.data_augumentation:
+                fg, alpha = self._composite_fg(alpha, fg, i)
+            self.current_fg = fg
+            self.current_alpha = alpha
+            self.is_resize = True if np.random.rand() < 0.25 else False
+        else:
+            fg = self.current_fg
+            alpha = self.current_alpha
+        
+        bcount = np.random.randint(num_bgs)
+        img, _, _, bg = process(fcount, bcount)
+
+        if self.is_resize:
+            interpolation = maybe_random_interp(cv.INTER_NEAREST)
+            img = cv.resize(img, (640, 640), interpolation=interpolation)
+            # fg = cv.resize(fg, (640, 640), interpolation=interpolation)
+            alpha = cv.resize(alpha, (640, 640), interpolation=interpolation)
+            # bg = cv.resize(bg, (640, 640), interpolation=interpolation)
 
         # crop size 320:640:480 = 1:1:1
         different_sizes = [(320, 320), (480, 480), (640, 640)]
         crop_size = random.choice(different_sizes)
 
         trimap = gen_trimap(alpha)
-
-        if args.data_augumentation:
-            img, alpha = self._composite_fg(img, alpha, fg, bg, i)
+        print(trimap.shape)
 
         x, y = random_choice(trimap, crop_size)
         img = safe_crop(img, x, y, crop_size)
@@ -215,57 +241,45 @@ class DIMDataset(Dataset):
         y[1, :, :] = mask
 
         if(i >= self.__len__() - 1):
-            fgs = self.fgs
-            bgs = self.bgs
-            random.shuffle(fgs)
-            random.shuffle(bgs)
-            self.fgs = fgs
-            self.bgs = bgs
+            names_train, names_valid = split_name()
+
+            if self.split == "train":
+                self.fgs = names_train
+            else:
+                self.fgs = names_valid
+
+            self.fgs = np.repeat(self.fgs, args.batch_size * 16)
+            self.fg_num = len(self.fgs)
 
         return x, y
 
     def __len__(self):
-        return len(self.names)
+        return len(self.fgs)
 
-    def _composite_fg(self, img, alpha, fg, bg, idx):
+    def _composite_fg(self, alpha, fg, idx):
         if np.random.rand() < 0.5:
-            idx2 = np.random.randint(self.fg_num) + idx
-            img2, alpha2, fg2, bg2 = process(idx2 % self.fg_num, 0)
+            idx2 = np.random.randint(self.fg_num_unique) + idx
+            alpha2 = get_raw("a", idx2 % self.fg_num_unique)
+            alpha2 = np.reshape(alpha2, (alpha2.shape[0], alpha2.shape[1]))
+            fg2 = get_raw("fg", idx2 % self.fg_num_unique)
             h, w = alpha.shape
-            fg2 = cv.resize(fg2, (w, h), interpolation=maybe_random_interp(cv.INTER_NEAREST))
-            alpha2 = cv.resize(alpha2, (w, h), interpolation=maybe_random_interp(cv.INTER_NEAREST))
+            interpolation = maybe_random_interp(cv.INTER_NEAREST)
+            fg2 = cv.resize(fg2, (w, h), interpolation=interpolation)
+            alpha2 = cv.resize(alpha2, (w, h), interpolation=interpolation)
             alpha_tmp = 1 - (1 - alpha / 255.0) * (1 - alpha2 / 255.0)
             if  np.any(alpha_tmp < 1):
-                img, alpha, _, _ = composite4(fg, fg2, alpha, w, h)
+                fg, alpha, _, _ = composite4(fg, fg2, alpha, w, h)
                 alpha = alpha_tmp * 255.0
-                img = img.astype(np.uint8)
-            img, alpha, fg, bg = composite4(img, bg, alpha, w, h)
-        if np.random.rand() < 0.25:
-            img = cv.resize(img, (640, 640), interpolation=maybe_random_interp(cv.INTER_NEAREST))
-            alpha = cv.resize(alpha, (640, 640), interpolation=maybe_random_interp(cv.INTER_NEAREST))
-        return img, alpha
+        return fg, alpha
 
-def gen_names():
-    num_fgs = 431
-    num_bgs = 43100
-    num_bgs_per_fg = 100
-
-    names = []
-    bcount = 0
-    for fcount in range(num_fgs):
-        for i in range(num_bgs_per_fg):
-            names.append(str(fcount) + '_' + str(bcount) + '.png')
-            bcount += 1
-
-    valid_names = random.sample(names, num_valid)
-    train_names = [n for n in names if n not in valid_names]
-
-    with open('valid_names.txt', 'w') as file:
-        file.write('\n'.join(valid_names))
-
-    with open('train_names.txt', 'w') as file:
-        file.write('\n'.join(train_names))
-
+def split_name():
+    names = list(range(num_fgs))
+    np.random.shuffle(names)
+    split_index = math.ceil(num_fgs - num_fgs * valid_ratio)
+    names_train = names[:split_index]
+    print(len(names_train))
+    names_valid = names[split_index:]
+    return names_train, names_valid
 
 if __name__ == "__main__":
-    gen_names()
+    split_name()
