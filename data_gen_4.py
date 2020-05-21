@@ -171,7 +171,7 @@ class DIMDataset(Dataset):
             self.fgs = names_valid
 
         self.fg_num_unique = len(self.fgs)
-        self.fgs = np.repeat(self.fgs, args.batch_size * 16)
+        self.fgs = np.repeat(self.fgs, args.batch_size * 8)
         print(len(self.fgs))
         self.fg_num = len(self.fgs)
         
