@@ -214,7 +214,6 @@ class DIMDataset(Dataset):
         crop_size = random.choice(different_sizes)
 
         trimap = gen_trimap(alpha)
-        print(trimap.shape)
 
         x, y = random_choice(trimap, crop_size)
         img = safe_crop(img, x, y, crop_size)
