@@ -99,7 +99,7 @@ def train_net(args):
             decays_since_improvement = 0
 
         # Save checkpoint
-        save_checkpoint_2(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best)
+        save_checkpoint_4(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best)
 
 
 def train(train_loader, model, optimizer, epoch, logger):
