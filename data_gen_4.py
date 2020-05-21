@@ -276,7 +276,7 @@ def split_name():
     np.random.shuffle(names)
     split_index = math.ceil(num_fgs - num_fgs * valid_ratio)
     names_train = names[:split_index]
-    print(len(names_train))
+    print(names_train)
     names_valid = names[split_index:]
     return names_train, names_valid
 
