@@ -6,7 +6,7 @@ from torch import nn
 from config import device, im_size, grad_clip, print_freq
 from data_gen_4 import DIMDataset
 from models_v16 import DIMModel
-from utils import parse_args, save_checkpoint_2, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
+from utils import parse_args, save_checkpoint_4, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
     alpha_prediction_loss, adjust_learning_rate
 from migrate_model import migrate
 from torch.utils.data import BatchSampler, SequentialSampler
@@ -49,10 +49,10 @@ def train_net(args):
     # Custom dataloaders
     train_dataset = DIMDataset('train')
     train_batch_sample = BatchSampler(SequentialSampler(train_dataset), batch_size=args.batch_size,drop_last=False)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=train_batch_sample, num_workers=0)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=train_batch_sample, num_workers=8, pin_memory=True)
     valid_dataset = DIMDataset('valid')
     valid_batch_sample = BatchSampler(SequentialSampler(valid_dataset), batch_size=args.batch_size,drop_last=False)
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_sampler=valid_batch_sample, num_workers=0)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_sampler=valid_batch_sample, num_workers=8, pin_memory=True)
 
     # Epochs
     for epoch in range(start_epoch, args.end_epoch):

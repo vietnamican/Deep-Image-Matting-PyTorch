@@ -47,6 +47,18 @@ def save_checkpoint_2(epoch, epochs_since_improvement, model, optimizer, loss, i
     if is_best:
         torch.save(state, 'checkpoints_2/BEST_checkpoint.tar')
 
+def save_checkpoint_4(epoch, epochs_since_improvement, model, optimizer, loss, is_best):
+    state = {'epoch': epoch,
+             'epochs_since_improvement': epochs_since_improvement,
+             'loss': loss,
+             'model': model,
+             'optimizer': optimizer}
+    filename = 'checkpoints_4/checkpoint_' + str(epoch) + '_' + str(loss) + '.tar'
+    # filename = 'checkpoint.tar'
+    torch.save(state, filename)
+    # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
+    if is_best:
+        torch.save(state, 'checkpoints_4/BEST_checkpoint.tar')
 
 class AverageMeter(object):
     """
