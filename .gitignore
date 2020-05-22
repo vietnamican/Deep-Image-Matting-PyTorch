@@ -13,3 +13,4 @@ reruns/
 checkpoints/
 runs**/
 checkpoints**/
+data/
