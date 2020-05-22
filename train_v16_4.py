@@ -32,14 +32,18 @@ def train_net(args):
             optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.mom,
                                         weight_decay=args.weight_decay)
         else:
-            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr,  weight_decay=args.weight_decay)
         start_epoch = args.start_epoch
     else:
         checkpoint = torch.load(checkpoint)
         start_epoch = checkpoint['epoch'] + 1
         epochs_since_improvement = checkpoint['epochs_since_improvement']
         model = checkpoint['model']
-        optimizer = checkpoint['optimizer']
+        if args.optimizer == 'adam':
+            if isinstance(checkpoint['optimizer'], torch.optim.Adam):
+                optimizer = checkpoint['optimizer']
+            else :
+                optimizer = torch.optim.Adam(model.parameters, lr=args.lr, betas = [args.beta1, args.beta2])
 
     logger = get_logger()
 

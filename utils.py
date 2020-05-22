@@ -111,17 +111,19 @@ def accuracy(scores, targets, k=1):
 def parse_args():
     parser = argparse.ArgumentParser(description='Train face network')
     # general
-    parser.add_argument('--start-epoch', type=int, default=0, help='training epoch size.')
+    parser.add_argument('--start-epoch', type=int, default=0, help='start epoch.')
     parser.add_argument('--end-epoch', type=int, default=1000, help='training epoch size.')
-    parser.add_argument('--lr', type=float, default=0.01, help='start learning rate')
+    parser.add_argument('--lr', type=float, default=0.001, help='start learning rate')
     parser.add_argument('--lr-step', type=int, default=10, help='period of learning rate decay')
-    parser.add_argument('--optimizer', default='sgd', help='optimizer')
+    parser.add_argument('--optimizer', default='adam', help='optimizer')
     parser.add_argument('--weight-decay', type=float, default=0.0, help='weight decay')
     parser.add_argument('--mom', type=float, default=0.9, help='momentum')
     parser.add_argument('--batch-size', type=int, default=32, help='batch size in each context')
     parser.add_argument('--checkpoint', type=str, default=None, help='checkpoint')
     parser.add_argument('--pretrained', type=bool, default=True, help='pretrained model')
-    parser.add_argument('--data-augumentation', type=bool, default=False, help='pretrained model')
+    parser.add_argument('--data-augumentation', type=bool, default=False, help='is augument data or not')
+    parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam.')
+    parser.add_argument('--beta2', type=float, default=0.999, help='beta2 for adam.')
     args = parser.parse_args()
     return args
 
