@@ -1,10 +1,12 @@
 import argparse
 import logging
 import os
+import math
 
 import cv2 as cv
 import numpy as np
 import torch
+from torch.utils.data import Sampler
 
 from config import im_size, epsilon, epsilon_sqr
 
@@ -191,3 +193,52 @@ def maybe_random_interp(cv2_interp):
     if np.random.rand() < 0.5:
         return np.random.choice(interp_list)
     return cv2_interp
+
+
+num_fgs = 431
+num_bgs_per_fg = 100
+num_bgs = num_fgs * num_bgs_per_fg
+split_ratio = 0.2
+
+out_names_train = 0
+out_names_valid = 0
+
+def split_name(split, num, split_index):
+    if(split == 'train'):
+        names = np.arange(num)
+        np.random.shuffle(names)
+        names_train = names[:split_index]
+        names_valid = names[split_index:]
+        global out_names_train 
+        out_names_train = names_train
+        global out_names_valid
+        out_names_valid = names_valid
+    return out_names_train, out_names_valid
+
+
+class InvariantSampler(Sampler):
+    def __init__(self, data_source, split, batch_size):
+        super().__init__(data_source)
+        self.data_source = data_source
+        self.split = split
+        self.batch_size = batch_size
+    def generate(self):
+        names_train, names_valid = split_name(self.split, num_fgs * 8, math.ceil(num_fgs * (1-split_ratio)) * 8)
+        if self.split == 'train':
+            names = names_train
+        else:
+            names = names_valid
+        np.random.shuffle(names)
+        names = names * self.batch_size
+        names = np.expand_dims(names, 1)
+        for i in range(int(np.log2(self.batch_size))):
+            temp = names + 2**i
+            names = np.concatenate([names, temp],axis=1)
+        
+        names = names.reshape(-1)
+        return np.asarray(names)
+    def __iter__(self):
+        self.names = self.generate()
+        return iter(self.names)
+    def __len__(self):
+        return len(self.names)  

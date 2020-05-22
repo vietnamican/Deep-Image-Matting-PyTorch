@@ -19,6 +19,7 @@ args = parse_args()
 num_fgs = 431
 num_bgs_per_fg = 100
 num_bgs = num_fgs * num_bgs_per_fg
+split_ratio = 0.2
 
 # Data augmentation and normalization for training
 # Just normalization for validation
@@ -239,17 +240,6 @@ class DIMDataset(Dataset):
         mask = np.equal(trimap, 128).astype(np.float32)
         y[1, :, :] = mask
 
-        if(i >= self.__len__() - 1):
-            names_train, names_valid = split_name()
-
-            if self.split == "train":
-                self.fgs = names_train
-            else:
-                self.fgs = names_valid
-
-            self.fgs = np.repeat(self.fgs, args.batch_size * 16)
-            self.fg_num = len(self.fgs)
-
         return x, y
 
     def __len__(self):
@@ -275,10 +265,12 @@ def split_name():
     names = list(range(num_fgs))
     np.random.shuffle(names)
     split_index = math.ceil(num_fgs - num_fgs * valid_ratio)
-    names_train = names[:split_index]
-    print(names_train)
-    names_valid = names[split_index:]
+    names_train = np.copy(names)
+    names_valid = np.copy(names)
     return names_train, names_valid
 
 if __name__ == "__main__":
-    split_name()
+    names_train, names_valid = split_name()
+    print(names_train)
+    names_train, names_valid = split_name()
+    print(names_train)

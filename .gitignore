@@ -12,3 +12,4 @@ BEST_checkpoint_older.tar
 reruns/
 checkpoints/
 runs**/
+checkpoints**/
