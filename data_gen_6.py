@@ -513,7 +513,6 @@ class DIMDataset(Dataset):
 
     def __getitem__(self, i):
         fcount = self.fgs[i]
-        print(i)
         if i % args.batch_size == 0:
             self.current_index = fcount
             alpha = get_raw("a", fcount)
