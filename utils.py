@@ -23,18 +23,18 @@ def clip_gradient(optimizer, grad_clip):
                 param.grad.data.clamp_(-grad_clip, grad_clip)
 
 
-def save_checkpoint(epoch, epochs_since_improvement, model, optimizer, loss, is_best):
+def save_checkpoint(epoch, epochs_since_improvement, model, optimizer, loss, is_best, logdir='checkpoints'):
     state = {'epoch': epoch,
              'epochs_since_improvement': epochs_since_improvement,
              'loss': loss,
              'model': model,
              'optimizer': optimizer}
-    filename = 'checkpoints/checkpoint_' + str(epoch) + '_' + str(loss) + '.tar'
+    filename = logdir + '/checkpoint_' + str(epoch) + '_' + str(loss) + '.tar'
     # filename = 'checkpoint.tar'
     torch.save(state, filename)
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
-        torch.save(state, 'BEST_checkpoint.tar')
+        torch.save(state, logdir + '/BEST_checkpoint.tar')
 
 def save_checkpoint_2(epoch, epochs_since_improvement, model, optimizer, loss, is_best):
     state = {'epoch': epoch,
@@ -61,6 +61,19 @@ def save_checkpoint_4(epoch, epochs_since_improvement, model, optimizer, loss, i
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
         torch.save(state, 'checkpoints_4/BEST_checkpoint.tar')
+
+def save_checkpoint_5(epoch, epochs_since_improvement, model, optimizer, loss, is_best):
+    state = {'epoch': epoch,
+             'epochs_since_improvement': epochs_since_improvement,
+             'loss': loss,
+             'model': model,
+             'optimizer': optimizer}
+    filename = 'checkpoints_5/checkpoint_' + str(epoch) + '_' + str(loss) + '.tar'
+    # filename = 'checkpoint.tar'
+    torch.save(state, filename)
+    # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
+    if is_best:
+        torch.save(state, 'checkpoints_5/BEST_checkpoint.tar')
 
 class AverageMeter(object):
     """
@@ -111,6 +124,7 @@ def accuracy(scores, targets, k=1):
 def parse_args():
     parser = argparse.ArgumentParser(description='Train face network')
     # general
+    parser.add_argument('--random-interp', type=bool, default=True, help='randomly choose interpolation')
     parser.add_argument('--start-epoch', type=int, default=0, help='start epoch.')
     parser.add_argument('--end-epoch', type=int, default=1000, help='training epoch size.')
     parser.add_argument('--lr', type=float, default=0.001, help='start learning rate')
