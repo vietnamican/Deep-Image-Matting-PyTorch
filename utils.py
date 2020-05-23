@@ -247,12 +247,12 @@ class InvariantSampler(Sampler):
         np.random.shuffle(names)
         names = names * self.batch_size
         names = np.expand_dims(names, 1)
-        for i in range(int(np.log2(self.batch_size))):
-            temp = names + 2**i
-            names = np.concatenate([names, temp],axis=1)
-        
-        names = names.reshape(-1)
-        return np.asarray(names)
+        reduces  = np.copy(names)
+        for i in np.arange(1, self.batch_size):
+            temp = names + i
+            reduces = np.concatenate([reduces, temp], axis=1)
+        reduces = reduces.reshape(-1)
+        return np.asarray(reduces)
     def __iter__(self):
         self.names = self.generate()
         return iter(self.names)
