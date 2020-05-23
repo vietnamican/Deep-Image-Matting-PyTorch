@@ -159,11 +159,11 @@ def valid(valid_loader, model, epoch, logger):
         # Move to GPU, if available
         img = img.type(torch.FloatTensor).to(device)  # [N, 3, 320, 320]
         alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 320, 320]
-        alpha_label = alpha_label.reshape((-1, 2, im_size * im_size))  # [N, 320*320]
+        alpha_label = alpha_label.reshape((-1, 2, alpha_label.shape[2]*alpha_label.shape[3]))  # [N, 320*320]
 
         # Forward prop.
         alpha_out = model(img)  # [N, 320, 320]
-        alpha_out = alpha_out.reshape((-1, 1, im_size * im_size))  # [N, 320*320]
+        alpha_out = alpha_out.reshape((-1, 1, alpha_out.shape[1]*alpha_out.shape[2]))  # [N, 320*320]
 
         # Calculate loss
         # loss = criterion(alpha_out, alpha_label)

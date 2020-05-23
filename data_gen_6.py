@@ -333,8 +333,8 @@ class RandomCrop(object):
             # cv.imwrite('../tmp/tmp2.png', trimap.astype(np.uint8))
             # raise ValueError("{} does    not have enough unknown area for crop.".format(name))
 
-        sample['fg'], sample['alpha'], sample['trimap'] = fg_crop, alpha_crop, trimap_crop
-        sample['bg'] = bg_crop
+        sample['fg'], sample['alpha'], sample['trimap'] = fg_crop.copy(), alpha_crop.copy(), trimap_crop.copy()
+        sample['bg'] = bg_crop.copy()
 
         return sample
 
@@ -484,10 +484,11 @@ class DIMDataset(Dataset):
             'train':
                 transforms.Compose(train_trans),
             'valid':
-                transforms.Compose([
-                    OriginScale(),
-                    ToTensor(split='valid'),
-                ]),
+                transforms.Compose( [
+                            GenTrimap(),
+                            RandomCrop(),
+                            Composite(),
+                            ToTensor(split="train"),]),
             'test':
                 transforms.Compose(test_trans)
         }[split]
