@@ -4,7 +4,7 @@ from tensorboardX import SummaryWriter
 from torch import nn
 
 from config import device, im_size, grad_clip, print_freq
-from data_gen_6 import DIMDataset
+from data_gen_2 import DIMDataset
 from models_v16 import DIMModel
 from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
     alpha_prediction_loss, adjust_learning_rate, InvariantSampler
@@ -18,7 +18,7 @@ def train_net(args):
     checkpoint = args.checkpoint
     start_epoch = 0
     best_loss = float('inf')
-    writer = SummaryWriter(logdir="runs_6")
+    writer = SummaryWriter(logdir="runs_2")
     epochs_since_improvement = 0
     decays_since_improvement = 0
 
@@ -103,7 +103,7 @@ def train_net(args):
             decays_since_improvement = 0
 
         # Save checkpoint
-        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, logdir="checkpoints_6")
+        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, "checkpoints_2")
 
 
 def train(train_loader, model, optimizer, epoch, logger):
@@ -115,12 +115,12 @@ def train(train_loader, model, optimizer, epoch, logger):
     for i, (img, alpha_label) in enumerate(train_loader):
         # Move to GPU, if available
         img = img.type(torch.FloatTensor).to(device)  # [N, 4, 320, 320]
-        alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 2, 320, 320]
-        alpha_label = alpha_label.reshape((-1, 2, alpha_label.shape[2]*alpha_label.shape[3]))  # [N, 2, 320*320]
+        alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 320, 320]
+        alpha_label = alpha_label.reshape((-1, 2, im_size * im_size))  # [N, 320*320]
 
         # Forward prop.
-        alpha_out = model(img)  # [N, 320, 320]
-        alpha_out = alpha_out.reshape((-1, 1, alpha_out.shape[1]*alpha_out.shape[2]))  # [N, 1, 320*320]
+        alpha_out = model(img)  # [N, 3, 320, 320]
+        alpha_out = alpha_out.reshape((-1, 1, im_size * im_size))  # [N, 320*320]
 
         # Calculate loss
         # loss = criterion(alpha_out, alpha_label)
@@ -159,11 +159,11 @@ def valid(valid_loader, model, epoch, logger):
         # Move to GPU, if available
         img = img.type(torch.FloatTensor).to(device)  # [N, 3, 320, 320]
         alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 320, 320]
-        alpha_label = alpha_label.reshape((-1, 2, alpha_label.shape[2]*alpha_label.shape[3]))  # [N, 320*320]
+        alpha_label = alpha_label.reshape((-1, 2, im_size * im_size))  # [N, 320*320]
 
         # Forward prop.
         alpha_out = model(img)  # [N, 320, 320]
-        alpha_out = alpha_out.reshape((-1, 1, alpha_out.shape[1]*alpha_out.shape[2]))  # [N, 320*320]
+        alpha_out = alpha_out.reshape((-1, 1, im_size * im_size))  # [N, 320*320]
 
         # Calculate loss
         # loss = criterion(alpha_out, alpha_label)
