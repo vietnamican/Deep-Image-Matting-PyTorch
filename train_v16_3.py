@@ -4,7 +4,7 @@ from tensorboardX import SummaryWriter
 from torch import nn
 
 from config import device, im_size, grad_clip, print_freq
-from data_gen_2 import DIMDataset
+from data_gen_3 import DIMDataset
 from models_v16 import DIMModel
 from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
     alpha_prediction_loss, adjust_learning_rate
@@ -17,7 +17,7 @@ def train_net(args):
     checkpoint = args.checkpoint
     start_epoch = 0
     best_loss = float('inf')
-    writer = SummaryWriter()
+    writer = SummaryWriter(logdir="runs_2")
     epochs_since_improvement = 0
     decays_since_improvement = 0
 
@@ -47,9 +47,9 @@ def train_net(args):
 
     # Custom dataloaders
     train_dataset = DIMDataset('train')
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=16)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8)
     valid_dataset = DIMDataset('valid')
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=16)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8)
 
     # Epochs
     for epoch in range(start_epoch, args.end_epoch):
@@ -96,7 +96,7 @@ def train_net(args):
             decays_since_improvement = 0
 
         # Save checkpoint
-        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, "checkpoints")
+        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, "checkpoinhts_3")
 
 
 def train(train_loader, model, optimizer, epoch, logger):

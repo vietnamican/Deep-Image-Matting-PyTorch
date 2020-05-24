@@ -4,11 +4,12 @@ from tensorboardX import SummaryWriter
 from torch import nn
 
 from config import device, im_size, grad_clip, print_freq
-from data_gen_3 import DIMDataset
+from data_gen_6 import DIMDataset
 from models_v16 import DIMModel
-from utils import parse_args, save_checkpoint_2, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
-    alpha_prediction_loss, adjust_learning_rate
+from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
+    alpha_prediction_loss, adjust_learning_rate, InvariantSampler
 from migrate_model import migrate
+from torch.utils.data import BatchSampler, SequentialSampler
 
 
 def train_net(args):
@@ -17,7 +18,7 @@ def train_net(args):
     checkpoint = args.checkpoint
     start_epoch = 0
     best_loss = float('inf')
-    writer = SummaryWriter(logdir="runs_2")
+    writer = SummaryWriter(logdir="runs_6")
     epochs_since_improvement = 0
     decays_since_improvement = 0
 
@@ -31,14 +32,18 @@ def train_net(args):
             optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.mom,
                                         weight_decay=args.weight_decay)
         else:
-            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+            optimizer = torch.optim.Adam(model.parameters(), lr=args.lr,  weight_decay=args.weight_decay)
         start_epoch = args.start_epoch
     else:
         checkpoint = torch.load(checkpoint)
         start_epoch = checkpoint['epoch'] + 1
         epochs_since_improvement = checkpoint['epochs_since_improvement']
         model = checkpoint['model']
-        optimizer = checkpoint['optimizer']
+        if args.optimizer == 'adam':
+            if isinstance(checkpoint['optimizer'], torch.optim.Adam):
+                optimizer = checkpoint['optimizer']
+            else :
+                optimizer = torch.optim.Adam(model.parameters, lr=args.lr, betas = [args.beta1, args.beta2])
 
     logger = get_logger()
 
@@ -47,9 +52,11 @@ def train_net(args):
 
     # Custom dataloaders
     train_dataset = DIMDataset('train')
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8)
+    train_batch_sample = BatchSampler(InvariantSampler(train_dataset, "train", args.batch_size), batch_size=args.batch_size,drop_last=False)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=train_batch_sample, num_workers=8, pin_memory=True)
     valid_dataset = DIMDataset('valid')
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8)
+    valid_batch_sample = BatchSampler(InvariantSampler(valid_dataset, "valid", args.batch_size), batch_size=args.batch_size,drop_last=False)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_sampler=valid_batch_sample, num_workers=8, pin_memory=True)
 
     # Epochs
     for epoch in range(start_epoch, args.end_epoch):
@@ -96,7 +103,7 @@ def train_net(args):
             decays_since_improvement = 0
 
         # Save checkpoint
-        save_checkpoint_2(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best)
+        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, logdir="checkpoints_6")
 
 
 def train(train_loader, model, optimizer, epoch, logger):
@@ -108,12 +115,12 @@ def train(train_loader, model, optimizer, epoch, logger):
     for i, (img, alpha_label) in enumerate(train_loader):
         # Move to GPU, if available
         img = img.type(torch.FloatTensor).to(device)  # [N, 4, 320, 320]
-        alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 320, 320]
-        alpha_label = alpha_label.reshape((-1, 2, im_size * im_size))  # [N, 320*320]
+        alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 2, 320, 320]
+        alpha_label = alpha_label.reshape((-1, 2, alpha_label.shape[2]*alpha_label.shape[3]))  # [N, 2, 320*320]
 
         # Forward prop.
-        alpha_out = model(img)  # [N, 3, 320, 320]
-        alpha_out = alpha_out.reshape((-1, 1, im_size * im_size))  # [N, 320*320]
+        alpha_out = model(img)  # [N, 320, 320]
+        alpha_out = alpha_out.reshape((-1, 1, alpha_out.shape[1]*alpha_out.shape[2]))  # [N, 1, 320*320]
 
         # Calculate loss
         # loss = criterion(alpha_out, alpha_label)
@@ -152,11 +159,11 @@ def valid(valid_loader, model, epoch, logger):
         # Move to GPU, if available
         img = img.type(torch.FloatTensor).to(device)  # [N, 3, 320, 320]
         alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 320, 320]
-        alpha_label = alpha_label.reshape((-1, 2, im_size * im_size))  # [N, 320*320]
+        alpha_label = alpha_label.reshape((-1, 2, alpha_label.shape[2]*alpha_label.shape[3]))  # [N, 320*320]
 
         # Forward prop.
         alpha_out = model(img)  # [N, 320, 320]
-        alpha_out = alpha_out.reshape((-1, 1, im_size * im_size))  # [N, 320*320]
+        alpha_out = alpha_out.reshape((-1, 1, alpha_out.shape[1]*alpha_out.shape[2]))  # [N, 320*320]
 
         # Calculate loss
         # loss = criterion(alpha_out, alpha_label)
