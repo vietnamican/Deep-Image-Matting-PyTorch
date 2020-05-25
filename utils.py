@@ -258,3 +258,25 @@ class InvariantSampler(Sampler):
         return iter(self.names)
     def __len__(self):
         return len(self.names)  
+
+class RandomSampler(Sampler):
+    def __init__(self, data_source, replacement=False, num_samples=None):
+        super().__init__(data_source)
+        self.data_source = data_source
+        self.replacement = replacement
+        self._num_samples = num_samples
+
+    def num_samples(self):
+        # dataset size might change at runtime
+        if self._num_samples is None:
+            return len(self.data_source)
+        return self._num_samples
+
+    def __iter__(self):
+        n = self.__len__()
+        if self.replacement:
+            return iter(torch.randint(high=n, size=(self.num_samples,), dtype=torch.int64).tolist())
+        return iter(torch.randperm(n).tolist())
+
+    def __len__(self):
+        return self.num_samples()
