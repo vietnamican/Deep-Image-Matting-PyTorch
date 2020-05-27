@@ -85,7 +85,9 @@ def composite4_test(fg, bg, a, w, h, trimap):
 
 
 if __name__ == '__main__':
-    checkpoint = 'BEST_checkpoint.tar'
+    f = open("BEST_checkpoint_older_test.txt", "w")
+
+    checkpoint = 'BEST_checkpoint_older.tar'
     checkpoint = torch.load(checkpoint)
     model = checkpoint['model'].module
     model = model.to(device)
@@ -152,4 +154,8 @@ if __name__ == '__main__':
         sad_losses.update(sad_loss.item())
         print("sad:{} mse:{}".format(sad_loss.item(), mse_loss.item()))
         print("sad:{} mse:{}".format(sad_losses.avg, mse_losses.avg))
+        f.write("filename:{} sad:{} mse:{}".format(trimap_name, sad_loss.item(), mse_loss.item()) + "\n")
+        f.write("filename:{} sad:{} mse:{}".format(trimap_name, sad_losses.avg, mse_losses.avg) + "\n")
+        
     print("sad:{} mse:{}".format(sad_losses.avg, mse_losses.avg))
+    f.write("sad:{} mse:{}".format(sad_losses.avg, mse_losses.avg) + "\n")
