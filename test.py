@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
         pred[new_trimap == 0] = 0.0
         pred[new_trimap == 255] = 1.0
-        cv.imwrite('images/test/out/' + trimap_name, pred * 255)
+        cv.imwrite('images/test/out/older/' + trimap_name, pred * 255)
 
         # Calculate loss
         # loss = criterion(alpha_out, alpha_label)
