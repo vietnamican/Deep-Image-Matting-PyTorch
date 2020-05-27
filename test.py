@@ -157,8 +157,9 @@ if __name__ == '__main__':
         f.write("filename:{} sad:{} mse:{}".format(trimap_name, sad_loss.item(), mse_loss.item()) + "\n")
         f.write("filename:{} sad:{} mse:{}".format(trimap_name, sad_losses.avg, mse_losses.avg) + "\n")
 
+        pred = (pred.copy() * 255).astype(np.uint8)
         draw_str(pred, (10, 20), "sad:{} mse:{}".format(sad_loss.item(), mse_loss.item()))
-        cv.imwrite('images/test/out/older/' + trimap_name, pred * 255)
+        cv.imwrite('images/test/out/older/' + trimap_name, pred )
         
     print("sad:{} mse:{}".format(sad_losses.avg, mse_losses.avg))
     f.write("sad:{} mse:{}".format(sad_losses.avg, mse_losses.avg) + "\n")
