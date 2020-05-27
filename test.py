@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from config import device, fg_path_test, a_path_test, bg_path_test
 from data_gen import data_transforms, fg_test_files, bg_test_files
-from utils import compute_mse, compute_sad, AverageMeter, get_logger
+from utils import compute_mse, compute_sad, AverageMeter, get_logger, draw_str
 
 
 def gen_test_names():
@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
         pred[new_trimap == 0] = 0.0
         pred[new_trimap == 255] = 1.0
-        cv.imwrite('images/test/out/older/' + trimap_name, pred * 255)
+
 
         # Calculate loss
         # loss = criterion(alpha_out, alpha_label)
@@ -156,6 +156,9 @@ if __name__ == '__main__':
         print("sad:{} mse:{}".format(sad_losses.avg, mse_losses.avg))
         f.write("filename:{} sad:{} mse:{}".format(trimap_name, sad_loss.item(), mse_loss.item()) + "\n")
         f.write("filename:{} sad:{} mse:{}".format(trimap_name, sad_losses.avg, mse_losses.avg) + "\n")
+
+        draw_str(pred, (10, 20), "sad:{} mse:{}".format(sad_loss.item(), mse_loss.item()))
+        cv.imwrite('images/test/out/older/' + trimap_name, pred * 255)
         
     print("sad:{} mse:{}".format(sad_losses.avg, mse_losses.avg))
     f.write("sad:{} mse:{}".format(sad_losses.avg, mse_losses.avg) + "\n")
