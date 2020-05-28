@@ -3,7 +3,7 @@ import torch
 from tensorboardX import SummaryWriter
 from torch import nn
 
-from config import device, im_size, grad_clip, print_freq, valid_ratio
+from config import device, im_size, grad_clip, print_freq, valid_ratio, num_fgs, num_bgs
 from data_gen_1 import DIMDataset
 from models_v16_2 import DIMModel
 from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
@@ -18,7 +18,7 @@ def train_net(args):
     checkpoint = args.checkpoint
     start_epoch = 0
     best_loss = float('inf')
-    writer = SummaryWriter(logdir="runs_1")
+    writer = SummaryWriter(logdir="runs_1_1")
     epochs_since_improvement = 0
     decays_since_improvement = 0
 
@@ -49,18 +49,18 @@ def train_net(args):
     # Custom dataloaders
     # train_dataset = DIMDataset('train')
     # train_sample = InvariantSampler(train_dataset, "train", args.batch_size)
-    # # train_sample = RandomSampler(train_dataset, num_samples= int((1 - valid_ratio) * 431) * args.batch_size * 8)
     # train_batch_sample = BatchSampler(InvariantSampler(train_dataset, "train", args.batch_size), batch_size=args.batch_size,drop_last=False)
     # train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=train_sample, num_workers=8, pin_memory=True, drop_last=False)
     # valid_dataset = DIMDataset('valid')
     # valid_sample = InvariantSampler(valid, "valid", args.batch_size)
-    # # valid_sample = RandomSampler(train_dataset, num_samples= int(valid_ratio * 431) * args.batch_size * 8)
     # valid_batch_sample = BatchSampler(InvariantSampler(valid_dataset, "valid", args.batch_size), batch_size=args.batch_size,drop_last=False)
     # valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, sampler=valid_sample, num_workers=8, pin_memory=True, drop_last=False)
     train_dataset = DIMDataset('train')
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False, num_workers=16)
+    train_sample = RandomSampler(train_dataset, num_samples= int(num_fgs * args.batch_size * 8))
+    train_loader = torch.utils.data.DataLoader(train_dataset, sampler=train_sample ,batch_size=args.batch_size, num_workers=8)
     valid_dataset = DIMDataset('valid')
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=16)
+    valid_sample = RandomSampler(train_dataset, num_samples= int(valid_ratio * num_fgs) * args.batch_size * 8)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, sampler=valid_sample, batch_size=args.batch_size, num_workers=8)
 
     # Epochs
     for epoch in range(start_epoch, args.end_epoch):
@@ -68,7 +68,7 @@ def train_net(args):
             break
 
         if args.optimizer == 'sgd' and epochs_since_improvement > 0 and epochs_since_improvement % 2 == 0:
-            checkpoint = 'BEST_checkpoint.tar'
+            checkpoint = 'checkpoints_1_1/BEST_checkpoint.tar'
             checkpoint = torch.load(checkpoint)
             model = checkpoint['model']
             optimizer = checkpoint['optimizer']
@@ -107,7 +107,7 @@ def train_net(args):
             decays_since_improvement = 0
 
         # Save checkpoint
-        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, "checkpoints_1")
+        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, "checkpoints_1_1")
 
 
 def train(train_loader, model, optimizer, epoch, logger):

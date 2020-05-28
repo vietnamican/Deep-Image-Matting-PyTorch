@@ -12,6 +12,10 @@ num_train = 34480
 # num_samples - num_train_samples
 num_valid = 8620
 
+num_fgs = 481
+num_bgs_per_fg = 100
+num_bgs = 44100
+
 valid_ratio = 0.2
 
 # Training parameters

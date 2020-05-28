@@ -10,16 +10,11 @@ from torchvision import transforms
 import tensorflow as tf
 
 import tfrecord_creator	
-from config import im_size, unknown_code, fg_path, bg_path, a_path, num_valid, valid_ratio
+from config import im_size, unknown_code, fg_path, bg_path, a_path, num_valid, valid_ratio, num_fgs, num_bgs
 from utils import safe_crop, parse_args, maybe_random_interp
 
 global args
 args = parse_args()
-
-num_fgs = 431
-num_bgs_per_fg = 100
-num_bgs = num_fgs * num_bgs_per_fg
-split_ratio = 0.2
 
 # Data augmentation and normalization for training
 # Just normalization for validation
@@ -44,12 +39,17 @@ def return_raw_image(dataset):
         
     return dataset_raw
 
-fg_dataset = tfrecord_creator.read("fg", "./data/tfrecord/")
-bg_dataset = tfrecord_creator.read("bg", "./data/tfrecord/")
-a_dataset  = tfrecord_creator.read("a",  "./data/tfrecord/")
+fg_dataset = tfrecord_creator.read("fg", "./data/tfrecord1/")
+bg_dataset = tfrecord_creator.read("bg", "./data/tfrecord1/")
+a_dataset  = tfrecord_creator.read("a",  "./data/tfrecord1/")
 fg_dataset = list(fg_dataset)
 bg_dataset = list(bg_dataset)
 a_dataset  = list(a_dataset)
+print("___________________")
+print(len(fg_dataset))
+print(len(bg_dataset))
+print(len(a_dataset))
+print("___________________")
 # fg_raw = return_raw_image(fg_dataset)
 # bg_raw = return_raw_image(bg_dataset)
 # a_raw  = return_raw_image(a_dataset)
@@ -63,7 +63,7 @@ def get_raw(type_of_dataset, count):
         channels=3
     else :
         temp = a_dataset[count]['image']
-        channels=0
+        channels=1
     temp = tf.image.decode_jpeg(temp, channels=channels)
     temp = np.asarray(temp)
     return temp
@@ -168,14 +168,14 @@ class DIMDataset(Dataset):
         # with open(filename, 'r') as file:
         #     self.names = file.read().splitlines()
 
-        fgs = np.repeat(np.arange(431), args.batch_size * 8)
+        fgs = np.repeat(np.arange(num_fgs), args.batch_size * 8)
         np.random.shuffle(fgs)
         split_index = int(fgs.shape[0] * (1 - valid_ratio))
-        if split == 'train':
-            self.fgs = fgs[:split_index]
-        else:
-            self.fgs = fgs[split_index:]
         self.fgs = fgs
+        # if split == 'train':
+        #     self.fgs = fgs[:split_index]
+        # else:
+        #     self.fgs = fgs[split_index:]
         self.fg_num = np.unique(self.fgs).shape[0]
 
         print(self.fg_num)
