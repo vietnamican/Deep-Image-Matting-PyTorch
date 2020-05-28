@@ -39,9 +39,9 @@ def return_raw_image(dataset):
         
     return dataset_raw
 
-fg_dataset = tfrecord_creator.read("fg", "./data/tfrecord1/")
-bg_dataset = tfrecord_creator.read("bg", "./data/tfrecord1/")
-a_dataset  = tfrecord_creator.read("a",  "./data/tfrecord1/")
+fg_dataset = tfrecord_creator.read("fg", "./data/tfrecord/")
+bg_dataset = tfrecord_creator.read("bg", "./data/tfrecord/")
+a_dataset  = tfrecord_creator.read("a",  "./data/tfrecord/")
 fg_dataset = list(fg_dataset)
 bg_dataset = list(bg_dataset)
 a_dataset  = list(a_dataset)
