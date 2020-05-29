@@ -57,8 +57,8 @@ class _aspp(nn.Module):
     def forward(self, x):
         x = self.atrous_conv(x)
         x = self.bn(x)
-        x = self.relu(x)
-        return x
+
+        return self.relu(x)
 
     def _init_weight(self):
         for m in self.modules():
@@ -78,9 +78,8 @@ class aspp(nn.Module):
         self.aspp4 = _aspp(inplanes, 256, 3, padding=dilations[2], dilation=dilations[2])
 
         self.conv1 = nn.Conv2d(1024, 256, 3, padding=1, bias=False)
-        self.relu1 = nn.ReLU()
         self.conv2 = nn.Conv2d(256, 512, 3, padding=1, bias=False)
-        self.relu2 = nn.ReLU()
+        self.relu = nn.ReLU()
         self._init_weight()
 
     def forward(self, x):
@@ -91,9 +90,9 @@ class aspp(nn.Module):
         x = torch.cat((x1, x2, x3, x4), dim=1)
 
         x = self.conv1(x)
-        x = self.relu1(x)
+        x = self.relu(x)
         x = self.conv2(x)
-        x = self.relu2(x)
+        x = self.relu(x)
 
         return x
 
