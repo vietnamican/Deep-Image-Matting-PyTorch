@@ -18,7 +18,7 @@ def train_net(args):
     checkpoint = args.checkpoint
     start_epoch = 0
     best_loss = float('inf')
-    writer = SummaryWriter(logdir="runs_1_1")
+    writer = SummaryWriter(logdir="runs_1_1_1")
     epochs_since_improvement = 0
     decays_since_improvement = 0
 
@@ -69,7 +69,7 @@ def train_net(args):
             break
 
         if args.optimizer == 'sgd' and epochs_since_improvement > 0 and epochs_since_improvement % 2 == 0:
-            checkpoint = 'checkpoints_1_1/BEST_checkpoint.tar'
+            checkpoint = 'checkpoints_1_1_1/BEST_checkpoint.tar'
             checkpoint = torch.load(checkpoint)
             model = checkpoint['model']
             optimizer = checkpoint['optimizer']
@@ -108,7 +108,7 @@ def train_net(args):
             decays_since_improvement = 0
 
         # Save checkpoint
-        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, "checkpoints_1_1")
+        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, "checkpoints_1_1_1")
 
 
 def train(train_loader, model, optimizer, epoch, logger):
