@@ -19,6 +19,7 @@ args = parse_args()
 # Data augmentation and normalization for training
 # Just normalization for validation
 if args.data_augumentation:
+    print("-----------------------------------------------")
     data_transforms = {
         'train': transforms.Compose([
             transforms.ColorJitter(brightness=0.125, contrast=0.125, saturation=0.125),
