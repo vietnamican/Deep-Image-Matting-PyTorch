@@ -4,7 +4,7 @@ from tensorboardX import SummaryWriter
 from torch import nn
 
 from config import device, im_size, grad_clip, print_freq, valid_ratio, num_fgs, num_bgs
-from data_gen_1 import DIMDataset
+from data_gen_1_data_augumentation import DIMDataset
 from models_v16_2 import DIMModel
 from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
     alpha_prediction_loss, adjust_learning_rate, InvariantSampler, RandomSampler

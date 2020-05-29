@@ -18,7 +18,25 @@ args = parse_args()
 
 # Data augmentation and normalization for training
 # Just normalization for validation
-data_transforms = {
+if args.data_augumentation:
+    data_transforms = {
+        'train': transforms.Compose([
+            transforms.ColorJitter(brightness=0.125, contrast=0.125, saturation=0.125),
+            transforms.RandomApply([
+                transforms.RandomOrder([
+                    transforms.RandomApply([transforms.RandomAffine(degrees=30, scale=[0.8,1.25], shear=10)]),
+                    transforms.RandomApply([transforms.RandomHorizontalFlip(0.5)]),
+                    transforms.RandomApply([transforms.RandomCrop(size=(320, 320), pad_if_needed=True)])])]),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ]),
+        'valid': transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ]),
+    }
+else:
+    data_transforms = {
     'train': transforms.Compose([
         transforms.ColorJitter(brightness=0.125, contrast=0.125, saturation=0.125),
         transforms.ToTensor(),
@@ -29,7 +47,6 @@ data_transforms = {
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ]),
 }
-
 def return_raw_image(dataset):
     dataset_raw = []
     for image_features in dataset:
