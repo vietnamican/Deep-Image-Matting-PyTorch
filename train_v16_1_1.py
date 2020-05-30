@@ -69,10 +69,10 @@ def train_net(args):
             break
 
         if args.optimizer == 'sgd' and epochs_since_improvement > 0 and epochs_since_improvement % 2 == 0:
-            checkpoint = 'checkpoints_1_1_1/BEST_checkpoint.tar'
-            checkpoint = torch.load(checkpoint)
-            model = checkpoint['model']
-            optimizer = checkpoint['optimizer']
+            # checkpoint = 'checkpoints_1_1_1/BEST_checkpoint.tar'
+            # checkpoint = torch.load(checkpoint)
+            # model = checkpoint['model']
+            # optimizer = checkpoint['optimizer']
             decays_since_improvement += 1
             print("\nDecays since last improvement: %d\n" % (decays_since_improvement,))
             adjust_learning_rate(optimizer, 0.6 ** decays_since_improvement)
