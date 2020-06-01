@@ -58,10 +58,10 @@ def train_net(args):
     # valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, sampler=valid_sample, num_workers=8, pin_memory=True, drop_last=False)
     train_dataset = DIMDataset('train')
     train_sample = RandomSampler(train_dataset, num_samples= int(num_fgs * args.batch_size * 8))
-    train_loader = torch.utils.data.DataLoader(train_dataset, sampler=train_sample ,batch_size=args.batch_size, num_workers=8)
+    train_loader = torch.utils.data.DataLoader(train_dataset, sampler=train_sample ,batch_size=args.batch_size, num_workers=8, pin_memory=True)
     valid_dataset = DIMDataset('valid')
     valid_sample = RandomSampler(train_dataset, num_samples= int(valid_ratio * num_fgs) * args.batch_size * 8)
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, sampler=valid_sample, batch_size=args.batch_size, num_workers=8)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, sampler=valid_sample, batch_size=args.batch_size, num_workers=8, pin_memory=True)
 
     # Epochs
     for epoch in range(start_epoch, args.end_epoch):
