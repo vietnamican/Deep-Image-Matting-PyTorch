@@ -87,7 +87,7 @@ def composite4_test(fg, bg, a, w, h, trimap):
 if __name__ == '__main__':
     f = open("new_30.txt", "w")
 
-    checkpoint = 'checkpoints_1_1_1/checkpoint_30_0.056788020270081084.tar'
+    checkpoint = 'checkpoints_1/checkpoint_30_0.056788020270081084.tar'
     checkpoint = torch.load(checkpoint)
     model = checkpoint['model'].module
     model = model.to(device)

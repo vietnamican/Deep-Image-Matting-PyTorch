@@ -1,5 +1,5 @@
 old_file  = open("BEST_checkpoint_older_test.txt")
-new_file  = open("checkpoint_20_test.txt")
+new_file  = open("checkpoint_30_test.txt")
 
 old_lines = old_file.readlines()
 new_lines = new_file.readlines()
