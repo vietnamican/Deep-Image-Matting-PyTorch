@@ -65,10 +65,10 @@ def train_net(args):
 
     # Epochs
     for epoch in range(start_epoch, args.end_epoch):
-        if args.optimizer == 'sgd' and epochs_since_improvement == 10:
+        if args.optimizer == 'sgd' and epochs_since_improvement == 20:
             break
 
-        if args.optimizer == 'sgd' and epochs_since_improvement > 0 and epochs_since_improvement % 5 == 0:
+        if args.optimizer == 'sgd' and epochs_since_improvement > 0 and epochs_since_improvement % 10 == 0:
             # checkpoint = 'checkpoints_1_1_1/BEST_checkpoint.tar'
             # checkpoint = torch.load(checkpoint)
             # model = checkpoint['model']
