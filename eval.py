@@ -8,19 +8,22 @@ from tqdm import tqdm
 
 from config import device
 from data_gen import data_transforms
-from utils import ensure_folder
+from utils import ensure_folder, parse_args
 
-IMG_FOLDER = 'data/alphamatting/input_lowres'
-TRIMAP_FOLDERS = ['data/alphamatting/trimap_lowres/Trimap1', 'data/alphamatting/trimap_lowres/Trimap2',
-                  'data/alphamatting/trimap_lowres/Trimap3']
-OUTPUT_FOLDERS = ['images/alphamatting/output_lowres/Trimap1', 'images/alphamatting/output_lowres/Trimap2', 'images/alphamatting/output_lowres/Trimap3', ]
 
 if __name__ == '__main__':
-    checkpoint = 'BEST_checkpoint.tar'
+    global args
+    args = parse_args()
+    checkpoint = args.checkpoint
     checkpoint = torch.load(checkpoint)
-    model = checkpoint['model'].module
+    model = checkpoint['model']
     model = model.to(device)
     model.eval()
+    output_folder = args.output_folder
+    IMG_FOLDER = 'data/alphamatting/input_lowres'
+    TRIMAP_FOLDERS = ['data/alphamatting/trimap_lowres/Trimap1', 'data/alphamatting/trimap_lowres/Trimap2',
+                  'data/alphamatting/trimap_lowres/Trimap3']
+    OUTPUT_FOLDERS = ['images/alphamatting/'+ output_folder +'/Trimap1', 'images/alphamatting/'+ output_folder +'/Trimap2', 'images/alphamatting/'+ output_folder +'/Trimap3', ]
 
     transformer = data_transforms['valid']
 

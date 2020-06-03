@@ -1,4 +1,5 @@
 import math
+import argparse
 
 import cv2 as cv
 import numpy as np
@@ -85,9 +86,14 @@ def composite4_test(fg, bg, a, w, h, trimap):
 
 
 if __name__ == '__main__':
-    f = open("new_30.txt", "w")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file', type=str, default='checkpoint.txt')
+    parser.add_argument('--checkpoint', type=str, default='BEST_checkkpoint.tar')
+    parser.add_argument('--output-folder', type=str)
+    args = parser.parse_args()
+    f = open(args.file, "w")
 
-    checkpoint = 'checkpoints_1/checkpoint_30_0.056788020270081084.tar'
+    checkpoint = args.checkpoint
     checkpoint = torch.load(checkpoint)
     model = checkpoint['model'].module
     model = model.to(device)
@@ -159,7 +165,7 @@ if __name__ == '__main__':
 
         pred = (pred.copy() * 255).astype(np.uint8)
         draw_str(pred, (10, 20), "sad:{} mse:{}".format(sad_loss.item(), mse_loss.item()))
-        cv.imwrite('images/test/out/new_30/' + trimap_name, pred )
+        cv.imwrite('images/test/out/' + args.output_folder + '/' + trimap_name, pred )
         
     print("sad:{} mse:{}".format(sad_losses.avg, mse_losses.avg))
     f.write("sad:{} mse:{}".format(sad_losses.avg, mse_losses.avg) + "\n")
