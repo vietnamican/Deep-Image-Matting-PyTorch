@@ -1,5 +1,12 @@
-old_file  = open("BEST_checkpoint_older_test.txt")
-new_file  = open("new_30.txt")
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--first", type=str)
+parser.add_argument("--second", type=str)
+args = parser.parse_args()
+
+old_file  = open(args.first)
+new_file  = open(args.second)
 
 old_lines = old_file.readlines()
 new_lines = new_file.readlines()
