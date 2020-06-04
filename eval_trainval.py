@@ -14,7 +14,7 @@ from utils import ensure_folder, compute_mse, compute_sad, draw_str
 IMG_FOLDER = 'alphamatting/input_lowres'
 ALPHA_FOLDER = 'alphamatting/gt_lowres'
 TRIMAP_FOLDERS = ['alphamatting/trimap_lowres/Trimap1', 'alphamatting/trimap_lowres/Trimap2']
-OUTPUT_FOLDERS = ['alphamatting/output_lowres_new30_2/Trimap1', 'alphamatting/output_lowres_new30_2/Trimap2', 'images/alphamatting/output_lowres_new30_2/Trimap3', ]
+OUTPUT_FOLDERS = ['alphamatting/output_lowres_new42_2/Trimap1', 'alphamatting/output_lowres_new42_2/Trimap2', 'images/alphamatting/output_lowres_new42_2/Trimap3', ]
 
 if __name__ == '__main__':
     # checkpoint = 'BEST_checkpoint.tar'
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # model = checkpoint['model'].module
     # model = model.to(device)
     # model.eval()
-    checkpoint = 'checkpoints_1/checkpoint_30_0.056788020270081084.tar'
+    checkpoint = 'checkpoints_1/checkpoint_42_0.055780417797601935.tar'
     checkpoint = torch.load(checkpoint)
     model = checkpoint['model']
     model = model.to(device)

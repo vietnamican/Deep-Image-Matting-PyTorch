@@ -1,4 +1,5 @@
 import os
+import argparse
 
 import cv2 as cv
 import numpy as np
@@ -12,8 +13,10 @@ from utils import ensure_folder, parse_args
 
 
 if __name__ == '__main__':
-    global args
-    args = parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--checkpoint', type=str, default='BEST_checkkpoint.tar')
+    parser.add_argument('--output-folder', type=str)
+    args = parser.parse_args()
     checkpoint = args.checkpoint
     checkpoint = torch.load(checkpoint)
     model = checkpoint['model']
