@@ -28,7 +28,9 @@ def save_checkpoint(epoch, epochs_since_improvement, model, optimizer, loss, is_
              'epochs_since_improvement': epochs_since_improvement,
              'loss': loss,
              'model': model,
-             'optimizer': optimizer}
+             'optimizer': optimizer,
+             'torch_seed': torch.get_rng_state(),
+             'np_seed': np.random.get_state()}
     filename = logdir + '/checkpoint_' + str(epoch) + '_' + str(loss) + '.tar'
     # filename = 'checkpoint.tar'
     torch.save(state, filename)

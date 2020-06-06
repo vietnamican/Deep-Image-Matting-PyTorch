@@ -13,8 +13,6 @@ from torch.utils.data import BatchSampler, SequentialSampler
 
 
 def train_net(args):
-    torch.manual_seed(7)
-    np.random.seed(7)
     checkpoint = args.checkpoint
     start_epoch = 0
     best_loss = float('inf')
@@ -24,6 +22,8 @@ def train_net(args):
 
     # Initialize / load checkpoint
     if checkpoint is None:
+        torch.manual_seed(7)
+        np.random.seed(7)
         model = DIMModel(n_classes=1, in_channels=4, is_unpooling=True, pretrain=True)
         if args.pretrained:
             migrate(model)
@@ -41,6 +41,14 @@ def train_net(args):
         epochs_since_improvement = checkpoint['epochs_since_improvement']
         model = checkpoint['model']
         optimizer = checkpoint['optimizer']
+        if 'torch_seed' in checkpoint:
+            torch.set_rng_state(checkpoint['torch_seed'])
+        else:
+            torch.manual_seed(7)
+        if 'np_seed' in checkpoint:
+            np.random.set_state(checkpoint['np_seed'])
+        else:
+            np.random.seed(7)
 
     logger = get_logger()
 
