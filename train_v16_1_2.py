@@ -4,7 +4,7 @@ from tensorboardX import SummaryWriter
 from torch import nn
 
 from config import device, im_size, grad_clip, print_freq, valid_ratio, num_fgs, num_bgs
-from data_gen_1 import DIMDataset
+from data_gen import DIMDataset
 from models_v16_4 import DIMModel
 from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
     alpha_prediction_loss, adjust_learning_rate, InvariantSampler, RandomSampler
@@ -102,7 +102,7 @@ def train_net(args):
             decays_since_improvement = 0
 
         # Save checkpoint
-        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, args.checkpoint, np_seed = np.random.get_state(), torch_seed = torch.random.get_rng_state())
+        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, args.checkpointdir, np_seed = np.random.get_state(), torch_seed = torch.random.get_rng_state())
 
 
 def train(train_loader, model, optimizer, epoch, logger):
