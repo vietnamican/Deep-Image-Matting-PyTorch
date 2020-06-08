@@ -23,15 +23,7 @@ def clip_gradient(optimizer, grad_clip):
                 param.grad.data.clamp_(-grad_clip, grad_clip)
 
 
-def save_checkpoint(epoch, epochs_since_improvement, model, optimizer, loss, is_best, logdir='checkpoints', *kwargs):
-    if 'torch_seed' in kwargs:
-        torch_seed = kwargs['torch_seed']
-    else: 
-        torch_seed = torch.random.get_rng_state()
-    if 'np_seed' in kwargs:
-        np_seed = kwargs['np_seed']
-    else:
-        np_seed = np.random.get_state()
+def save_checkpoint(epoch, epochs_since_improvement, model, optimizer, loss, is_best, logdir, np_seed, torch_seed):
     state = {'epoch': epoch,
              'epochs_since_improvement': epochs_since_improvement,
              'loss': loss,
