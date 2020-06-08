@@ -16,7 +16,7 @@ def train_net(args):
     checkpoint = args.checkpoint
     start_epoch = 0
     best_loss = float('inf')
-    writer = SummaryWriter(logdir="runs_1_1_2")
+    writer = SummaryWriter(logdir=args.logdir)
     epochs_since_improvement = 0
     decays_since_improvement = 0
 
@@ -102,7 +102,7 @@ def train_net(args):
             decays_since_improvement = 0
 
         # Save checkpoint
-        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, "checkpoints_1_1_2", np_seed = np.random.get_state(), torch_seed = torch.random.get_rng_state())
+        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, args.checkpoint, np_seed = np.random.get_state(), torch_seed = torch.random.get_rng_state())
 
 
 def train(train_loader, model, optimizer, epoch, logger):

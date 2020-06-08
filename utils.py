@@ -126,6 +126,8 @@ def accuracy(scores, targets, k=1):
 def parse_args():
     parser = argparse.ArgumentParser(description='Train face network')
     # general
+    parser.add_argument('--checkpointdir', type=str)
+    parser.add_argument('--logdir', type=str)
     parser.add_argument('--random-interp', type=bool, default=True, help='randomly choose interpolation')
     parser.add_argument('--start-epoch', type=int, default=0, help='start epoch.')
     parser.add_argument('--end-epoch', type=int, default=1000, help='training epoch size.')
