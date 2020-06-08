@@ -23,14 +23,22 @@ def clip_gradient(optimizer, grad_clip):
                 param.grad.data.clamp_(-grad_clip, grad_clip)
 
 
-def save_checkpoint(epoch, epochs_since_improvement, model, optimizer, loss, is_best, logdir='checkpoints'):
+def save_checkpoint(epoch, epochs_since_improvement, model, optimizer, loss, is_best, logdir='checkpoints', *kwargs):
+    if 'torch_seed' in kwargs:
+        torch_seed = kwargs['torch_seed']
+    else: 
+        torch_seed = torch.random.get_rng_state()
+    if 'np_seed' in kwargs:
+        np_seed = kwargs['np_seed']
+    else:
+        np_seed = np.random.get_state()
     state = {'epoch': epoch,
              'epochs_since_improvement': epochs_since_improvement,
              'loss': loss,
              'model': model,
              'optimizer': optimizer,
-             'torch_seed': torch.get_rng_state(),
-             'np_seed': np.random.get_state()}
+             'torch_seed': torch_seed,
+             'np_seed': np_seed}
     filename = logdir + '/checkpoint_' + str(epoch) + '_' + str(loss) + '.tar'
     # filename = 'checkpoint.tar'
     torch.save(state, filename)

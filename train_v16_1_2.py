@@ -22,7 +22,7 @@ def train_net(args):
 
     # Initialize / load checkpoint
     if checkpoint is None:
-        torch.manual_seed(7)
+        torch.random.manual_seed(7)
         np.random.seed(7)
         model = DIMModel(n_classes=1, in_channels=4, is_unpooling=True, pretrain=True)
         if args.pretrained:
@@ -42,9 +42,9 @@ def train_net(args):
         model = checkpoint['model']
         optimizer = checkpoint['optimizer']
         if 'torch_seed' in checkpoint:
-            torch.set_rng_state(checkpoint['torch_seed'])
+            torch.random.set_rng_state(checkpoint['torch_seed'])
         else:
-            torch.manual_seed(7)
+            torch.random.manual_seed(7)
         if 'np_seed' in checkpoint:
             np.random.set_state(checkpoint['np_seed'])
         else:
@@ -102,7 +102,7 @@ def train_net(args):
             decays_since_improvement = 0
 
         # Save checkpoint
-        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, "checkpoints_1_1_2")
+        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, "checkpoints_1_1_2", np_seed = np.random.get_state(), torch_seed = torch.random.get_rng_state())
 
 
 def train(train_loader, model, optimizer, epoch, logger):
