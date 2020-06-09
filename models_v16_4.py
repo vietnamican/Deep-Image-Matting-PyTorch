@@ -221,6 +221,28 @@ class DIMModel(nn.Module):
         # return
         # migrate_model.migrate(self)
 
+class RefinementModel(nn.Module):
+    def __init__(self):
+        super(RefinementModel, self).__init__()
+
+        self.conv_1 = conv2DBatchNormRelu(4, 64, 3, 1, 1)
+        self.conv_2 = conv2DBatchNormRelu(64,64, 3, 1, 1)
+        self.conv_3 = conv2DBatchNormRelu(64,64, 3, 1, 1)
+        self.conv_4 = conv2DBatchNormRelu(64, 1, 3, 1, 1, with_bn=False, with_relu=False)
+        self.sigmoid = nn.Sigmoid()
+    
+    def forward(self, inputs):
+        x = self.conv_1(inputs)
+        x = self.conv_2(x)
+        x = self.conv_3(x)
+        x = self.conv_4(x)
+
+        x = torch.squeeze(x, dim=1)
+        x = self.sigmoid(x)
+        skip = inputs[:,3,:,:]
+        x = x + skip
+
+        return x
 
 if __name__ == '__main__':
     model = DIMModel().to(device)
