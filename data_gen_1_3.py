@@ -168,7 +168,7 @@ class DIMDataset(Dataset):
         # with open(filename, 'r') as file:
         #     self.names = file.read().splitlines()
 
-        fgs = np.repeat(np.arange(num_fgs), 128)
+        fgs = np.repeat(np.arange(num_fgs), args.batch_size * 8)
         np.random.shuffle(fgs)
         split_index = int(fgs.shape[0] * (1 - valid_ratio))
         self.fgs = fgs
