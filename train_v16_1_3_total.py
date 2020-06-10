@@ -54,10 +54,10 @@ def train_net(args):
     model = model.to(device)
     edmodel = edmodel.to(device)
     train_dataset = DIMDataset('train')
-    train_sample = RandomSampler(train_dataset, num_samples= 10)
+    train_sample = RandomSampler(train_dataset, num_samples= int(num_fgs * 128))
     train_loader = torch.utils.data.DataLoader(train_dataset, sampler=train_sample ,batch_size=args.batch_size, num_workers=8, pin_memory=True)
     valid_dataset = DIMDataset('valid')
-    valid_sample = RandomSampler(train_dataset, num_samples= 10)
+    valid_sample = RandomSampler(train_dataset, num_samples= int(valid_ratio * num_fgs) * 128)
     valid_loader = torch.utils.data.DataLoader(valid_dataset, sampler=valid_sample, batch_size=args.batch_size, num_workers=8, pin_memory=True)
 
     # Epochs
