@@ -25,6 +25,7 @@ def train_net(args):
     # Initialize / load checkpoint
     if checkpoint is None:
         torch.random.manual_seed(7)
+        torch.cuda.manual_seed(7)
         np.random.seed(7)
         model = RefinementModel()
         model = nn.DataParallel(model)
@@ -45,6 +46,10 @@ def train_net(args):
             torch.random.set_rng_state(checkpoint['torch_seed'])
         else:
             torch.random.manual_seed(7)
+        if 'torch_cuda_seed' in checkpoint:
+            torch.cuda.set_rng_state(checkpoint['torch_cuda_seed'])
+        else:
+            torch.cuda.manual_seed(7)
         if 'np_seed' in checkpoint:
             np.random.set_state(checkpoint['np_seed'])
         else:
@@ -105,7 +110,7 @@ def train_net(args):
             decays_since_improvement = 0
 
         # Save checkpoint
-        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, args.checkpointdir, np_seed = np.random.get_state(), torch_seed = torch.random.get_rng_state())
+        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, args.checkpointdir)
 
 
 def train(train_loader, edmodel, model, optimizer, epoch, logger):
