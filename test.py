@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from config import device, fg_path_test, a_path_test, bg_path_test
 from data_gen import data_transforms, fg_test_files, bg_test_files
-from utils import compute_mse, compute_sad, AverageMeter, get_logger, draw_str
+from utils import compute_mse, compute_sad, AverageMeter, get_logger, draw_str, ensure_folder
 
 
 def gen_test_names():
@@ -90,6 +90,9 @@ if __name__ == '__main__':
     parser.add_argument('--file', type=str, default='checkpoint.txt')
     parser.add_argument('--checkpoint', type=str, default='BEST_checkkpoint.tar')
     parser.add_argument('--output-folder', type=str)
+    ensure_folder('images/test/out/' + args.output_folder + '/Trimap1')
+    ensure_folder('images/test/out/' + args.output_folder + '/Trimap2')
+    ensure_folder('images/test/out/' + args.output_folder + '/Trimap3')
     args = parser.parse_args()
     f = open(args.file, "w")
 
