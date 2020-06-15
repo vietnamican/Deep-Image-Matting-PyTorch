@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torchsummary import summary
+from torchsummaryX import summary
 
 from config import device, im_size
 
@@ -194,4 +194,4 @@ class RefinementModel(nn.Module):
 if __name__ == '__main__':
     model = DIMModel().to(device)
 
-    summary(model, (4, im_size, im_size))
+    summary(model, torch.Tensor(4, 4, 320, 320).cuda())

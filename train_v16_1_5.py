@@ -5,7 +5,7 @@ from torch import nn
 
 from config import device, im_size, grad_clip, print_freq, valid_ratio, num_fgs, num_bgs
 from data_gen_1_3 import DIMDataset
-from models_v16_5 import DIMModel
+from models_v16_6 import DIMModel
 from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
     alpha_prediction_loss, adjust_learning_rate, InvariantSampler, RandomSampler
 from migrate_model import migrate
@@ -14,7 +14,7 @@ from torch.utils.data import BatchSampler, SequentialSampler
 
 def train_net(args):
     checkpoint = args.checkpoint
-    start_epoch = 0
+    start_epoch = 1
     best_loss = float('inf')
     writer = SummaryWriter(logdir=args.logdir)
     epochs_since_improvement = 0
