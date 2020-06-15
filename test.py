@@ -90,10 +90,10 @@ if __name__ == '__main__':
     parser.add_argument('--file', type=str, default='checkpoint.txt')
     parser.add_argument('--checkpoint', type=str, default='BEST_checkkpoint.tar')
     parser.add_argument('--output-folder', type=str)
+    args = parser.parse_args()
     ensure_folder('images/test/out/' + args.output_folder + '/Trimap1')
     ensure_folder('images/test/out/' + args.output_folder + '/Trimap2')
     ensure_folder('images/test/out/' + args.output_folder + '/Trimap3')
-    args = parser.parse_args()
     f = open(args.file, "w")
 
     checkpoint = args.checkpoint
@@ -157,10 +157,10 @@ if __name__ == '__main__':
 
         # Calculate loss
         # loss = criterion(alpha_out, alpha_label)
-        mse_loss = compute_mse(pred, alpha, trimap)
+        mse_loss = compute_mse(pred, alpha, new_trimap)
         sad_loss = compute_sad(pred, alpha)
-        gradient_loss = compute_gradient_loss(pred, alpha, trimap)
-        connectivity_loss = compute_connectivity_error(pred, alpha, trimap)
+        gradient_loss = compute_gradient_loss(pred, alpha, new_trimap)
+        connectivity_loss = compute_connectivity_error(pred, alpha, new_trimap)
 
         # Keep track of metrics
         mse_losses.update(mse_loss.item())

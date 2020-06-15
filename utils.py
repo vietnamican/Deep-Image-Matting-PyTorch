@@ -204,9 +204,11 @@ def gaussgradient(im, sigma):
 
 def compute_gradient_loss(pred, target, trimap):
 
-    pred = pred[:,0,:]
-    target = target[:,1,:]
-
+    # pred = pred / 255.0
+    # target = target / 255.0
+    print(pred.shape)
+    print(target.shape)
+    print(trimap.shape)
     pred_x, pred_y = gaussgradient(pred, 1.4)
     target_x, target_y = gaussgradient(target, 1.4)
 
@@ -226,8 +228,9 @@ def getLargestCC(segmentation):
 
 
 def compute_connectivity_error(pred, target, trimap, step=0.1):
-    pred = pred[:,0,:]
-    target = target[:,1,:]
+
+    # pred = pred / 255.0
+    # target = target / 255.0
     h, w = pred.shape
 
     thresh_steps = list(np.arange(0, 1 + step, step))
