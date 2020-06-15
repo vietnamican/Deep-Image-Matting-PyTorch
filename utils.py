@@ -7,6 +7,9 @@ import cv2 as cv
 import numpy as np
 import torch
 from torch.utils.data import Sampler
+from skimage.measure import label
+import scipy.ndimage
+import scipy.ndimage.morphology
 
 from config import im_size, epsilon, epsilon_sqr
 
@@ -170,6 +173,82 @@ def safe_crop(mat, x, y, crop_size=(im_size, im_size)):
         ret = cv.resize(ret, dsize=(im_size, im_size), interpolation=cv.INTER_NEAREST)
     return ret
 
+def gauss(x, sigma):
+    y = np.exp(-x ** 2 / (2 * sigma ** 2)) / (sigma * np.sqrt(2 * np.pi))
+    return y
+
+
+def dgauss(x, sigma):
+    y = -x * gauss(x, sigma) / (sigma ** 2)
+    return y
+
+
+def gaussgradient(im, sigma):
+    epsilon = 1e-2
+    halfsize = np.ceil(sigma * np.sqrt(-2 * np.log(np.sqrt(2 * np.pi) * sigma * epsilon))).astype(np.int32)
+    size = 2 * halfsize + 1
+    hx = np.zeros((size, size))
+    for i in range(0, size):
+        for j in range(0, size):
+            u = [i - halfsize, j - halfsize]
+            hx[i, j] = gauss(u[0], sigma) * dgauss(u[1], sigma)
+
+    hx = hx / np.sqrt(np.sum(np.abs(hx) * np.abs(hx)))
+    hy = hx.transpose()
+
+    gx = scipy.ndimage.convolve(im, hx, mode='nearest')
+    gy = scipy.ndimage.convolve(im, hy, mode='nearest')
+
+    return gx, gy
+
+
+def compute_gradient_loss(pred, target, trimap):
+
+    pred = pred[:,0,:]
+    target = target[:,1,:]
+
+    pred_x, pred_y = gaussgradient(pred, 1.4)
+    target_x, target_y = gaussgradient(target, 1.4)
+
+    pred_amp = np.sqrt(pred_x ** 2 + pred_y ** 2)
+    target_amp = np.sqrt(target_x ** 2 + target_y ** 2)
+
+    error_map = (pred_amp - target_amp) ** 2
+    loss = np.sum(error_map[trimap == 128])
+
+    return loss / 1000.
+
+
+def getLargestCC(segmentation):
+    labels = label(segmentation, connectivity=1)
+    largestCC = labels == np.argmax(np.bincount(labels.flat))
+    return largestCC
+
+
+def compute_connectivity_error(pred, target, trimap, step=0.1):
+    pred = pred[:,0,:]
+    target = target[:,1,:]
+    h, w = pred.shape
+
+    thresh_steps = list(np.arange(0, 1 + step, step))
+    l_map = np.ones_like(pred, dtype=np.float) * -1
+    for i in range(1, len(thresh_steps)):
+        pred_alpha_thresh = (pred >= thresh_steps[i]).astype(np.int)
+        target_alpha_thresh = (target >= thresh_steps[i]).astype(np.int)
+
+        omega = getLargestCC(pred_alpha_thresh * target_alpha_thresh).astype(np.int)
+        flag = ((l_map == -1) & (omega == 0)).astype(np.int)
+        l_map[flag == 1] = thresh_steps[i - 1]
+
+    l_map[l_map == -1] = 1
+
+    pred_d = pred - l_map
+    target_d = target - l_map
+    pred_phi = 1 - pred_d * (pred_d >= 0.15).astype(np.int)
+    target_phi = 1 - target_d * (target_d >= 0.15).astype(np.int)
+    loss = np.sum(np.abs(pred_phi - target_phi)[trimap == 128])
+
+    return loss / 1000.
 
 # alpha prediction loss: the abosolute difference between the ground truth alpha values and the
 # predicted alpha values at each pixel. However, due to the non-differentiable property of
