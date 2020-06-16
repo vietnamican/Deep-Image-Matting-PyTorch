@@ -91,6 +91,7 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint', type=str, default='BEST_checkkpoint.tar')
     parser.add_argument('--output-folder', type=str)
     args = parser.parse_args()
+    ensure_folder('images/test/out/' + args.output_folder )
     ensure_folder('images/test/out/' + args.output_folder + '/Trimap1')
     ensure_folder('images/test/out/' + args.output_folder + '/Trimap2')
     ensure_folder('images/test/out/' + args.output_folder + '/Trimap3')
