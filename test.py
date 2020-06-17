@@ -90,7 +90,11 @@ if __name__ == '__main__':
     parser.add_argument('--file', type=str, default='checkpoint.txt')
     parser.add_argument('--checkpoint', type=str, default='BEST_checkkpoint.tar')
     parser.add_argument('--output-folder', type=str)
+    parser.add_argument('--device', type=str)
     args = parser.parse_args()
+    ensure_folder('images' )
+    ensure_folder('images/test' )
+    ensure_folder('images/test/out' )
     ensure_folder('images/test/out/' + args.output_folder )
     ensure_folder('images/test/out/' + args.output_folder + '/Trimap1')
     ensure_folder('images/test/out/' + args.output_folder + '/Trimap2')
@@ -100,7 +104,7 @@ if __name__ == '__main__':
     checkpoint = args.checkpoint
     checkpoint = torch.load(checkpoint)
     model = checkpoint['model']
-    model = model.to(device)
+    model = model.module.to(args.device)
     model.eval()
 
     transformer = data_transforms['valid']
@@ -143,7 +147,7 @@ if __name__ == '__main__':
         x[0:, 3, :, :] = torch.from_numpy(new_trimap.copy() / 255.)
 
         # Move to GPU, if available
-        x = x.type(torch.FloatTensor).to(device)  # [1, 4, 320, 320]
+        x = x.type(torch.FloatTensor).to(args.device)  # [1, 4, 320, 320]
         alpha = alpha / 255.
 
         with torch.no_grad():
