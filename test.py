@@ -102,7 +102,10 @@ if __name__ == '__main__':
     f = open(args.file, "w")
 
     checkpoint = args.checkpoint
-    checkpoint = torch.load(checkpoint)
+    if args.device == 'cpu':
+        checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
+    else:
+        checkpoint = torch.load(checkpoint)
     model = checkpoint['model']
     model = model.module.to(args.device)
     model.eval()
