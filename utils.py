@@ -204,11 +204,6 @@ def gaussgradient(im, sigma):
 
 def compute_gradient_loss(pred, target, trimap):
 
-    # pred = pred / 255.0
-    # target = target / 255.0
-    print(pred.shape)
-    print(target.shape)
-    print(trimap.shape)
     pred_x, pred_y = gaussgradient(pred, 1.4)
     target_x, target_y = gaussgradient(target, 1.4)
 
