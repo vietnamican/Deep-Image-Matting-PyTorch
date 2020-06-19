@@ -7,10 +7,17 @@ import torch
 from torchvision import transforms
 from tqdm import tqdm
 
-# from config import device
-from data_gen import data_transforms
-from utils import ensure_folder, parse_args
-
+data_transforms = {
+    'train': transforms.Compose([
+        transforms.ColorJitter(brightness=0.125, contrast=0.125, saturation=0.125),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+    ]),
+    'valid': transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ]),
+}
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
