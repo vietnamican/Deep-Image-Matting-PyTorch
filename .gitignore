@@ -16,3 +16,4 @@ checkpoints**/
 data/
 images/
 logs/
+test_image/
