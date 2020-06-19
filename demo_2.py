@@ -28,7 +28,7 @@ if __name__ == '__main__':
     else:
         checkpoint = torch.load(checkpoint)
     model = checkpoint['model']
-    model = model.to(args.device)
+    model = model.module.to(args.device)
     model.eval()
 
     transformer = data_transforms['valid']
