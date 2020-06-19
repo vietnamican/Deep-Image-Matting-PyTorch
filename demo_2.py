@@ -17,6 +17,8 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint', type=str, default='BEST_checkkpoint.tar')
     parser.add_argument('--image', type=str)
     parser.add_argument('--trimap', type=str)
+    parser.add_argument('--result', type=str)
+    parser.add_argument('--rgb-result', type=str)
 
     args = parser.parse_args()
     checkpoint = args.checkpoint
@@ -64,15 +66,9 @@ if __name__ == '__main__':
     out = (pred.copy() * 255).astype(np.uint8)
 
     image = img.copy()
-    # print(pred.dtype)
-    print(image.shape)
     image = np.transpose(image, (2,0,1))
-    print(image.dtype)
     rgb_image = image * pred
     rgb_image = np.transpose(rgb_image,(1,2,0))
-    # rgb_image = rgb_image[...,::-1]
-    print(rgb_image.shape)
-    cv.imwrite('rgb.png', rgb_image)
 
-    cv.imwrite('result.png', out)
-    print('wrote {}.'.format("result.png"))
+    cv.imwrite(args.rgb_result, rgb_image)
+    cv.imwrite(args.result, out)
