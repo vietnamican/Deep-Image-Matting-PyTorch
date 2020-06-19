@@ -7,7 +7,7 @@ import torch
 from torchvision import transforms
 from tqdm import tqdm
 
-from config import device
+# from config import device
 from data_gen import data_transforms
 from utils import ensure_folder, parse_args
 
@@ -19,15 +19,16 @@ if __name__ == '__main__':
     parser.add_argument('--trimap', type=str)
     parser.add_argument('--result', type=str)
     parser.add_argument('--rgb-result', type=str)
+    parser.add_argument('--device', type=str)
 
     args = parser.parse_args()
     checkpoint = args.checkpoint
-    if device == 'cpu':
+    if args.device == 'cpu':
         checkpoint = torch.load(checkpoint, map_location=lambda storage, loc: storage)
     else:
         checkpoint = torch.load(checkpoint)
     model = checkpoint['model']
-    model = model.to(device)
+    model = model.to(args.device)
     model.eval()
 
     transformer = data_transforms['valid']
@@ -52,7 +53,7 @@ if __name__ == '__main__':
     # print(torch.median(x[0:, 3, :, :]))
 
     # Move to GPU, if available
-    x = x.type(torch.FloatTensor).to(device)
+    x = x.type(torch.FloatTensor).to(args.device)
 
     with torch.no_grad():
         pred = model(x)
