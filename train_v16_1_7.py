@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from tensorboardX import SummaryWriter
 from torch import nn
+import random
 
 from config import device, im_size, grad_clip, print_freq, valid_ratio, num_fgs, num_bgs
 from data_gen_1_7 import DIMDataset
@@ -54,6 +55,10 @@ def train_net(args):
             np.random.set_state(checkpoint['np_seed'])
         else:
             np.random.seed(7)
+        if 'python_seed' in checkpoint:
+            random.setstate(checkpoint['python_seed'])
+        else:
+            random.seed(7)
 
     logger = get_logger()
 
