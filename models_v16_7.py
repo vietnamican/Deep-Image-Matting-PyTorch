@@ -250,7 +250,7 @@ class DIMModel(nn.Module):
         x = self.up2(x, x2)
         x = self.up1(x, x1)
         logits = self.outc(x)
-        x = torch.squeeze(x, dim=1)
+        x = torch.squeeze(logits, dim=1)
         x = self.sigmoid(x)
         return x
 
