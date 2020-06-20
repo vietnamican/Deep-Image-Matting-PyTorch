@@ -252,7 +252,7 @@ class DIMModel(nn.Module):
         logits = self.outc(x)
         x = torch.squeeze(x, dim=1)
         x = self.sigmoid(x)
-        return logits
+        return x
 
 if __name__ == '__main__':
     model = DIMModel().to(device)
