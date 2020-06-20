@@ -66,10 +66,10 @@ def train_net(args):
 
     # Epochs
     for epoch in range(start_epoch, args.end_epoch):
-        if args.optimizer == 'sgd' and epochs_since_improvement == 20:
+        if args.optimizer == 'sgd' and epochs_since_improvement == 10:
             break
 
-        if args.optimizer == 'sgd' and epochs_since_improvement > 0 and epochs_since_improvement % 10 == 0:
+        if args.optimizer == 'sgd' and epochs_since_improvement > 0 and epochs_since_improvement % 2 == 0:
             decays_since_improvement += 1
             print("\nDecays since last improvement: %d\n" % (decays_since_improvement,))
             adjust_learning_rate(optimizer, 0.6 ** decays_since_improvement)
