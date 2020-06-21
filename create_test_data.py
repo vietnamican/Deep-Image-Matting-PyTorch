@@ -117,10 +117,10 @@ if __name__ == '__main__':
 
         img, alpha, fg, bg, trimap = process_test(im_name, bg_name, trimap)
 
-        # cv.imwrite(out_path_test_composition + name, img)
-        # cv.imwrite(a_path_test_composition + name, alpha)
-        # cv.imwrite(fg_path_test_composition + name, fg)
+        cv.imwrite(out_path_test_composition + name, img)
+        cv.imwrite(a_path_test_composition + name, alpha)
+        cv.imwrite(fg_path_test_composition + name, fg)
         cv.imwrite(bg_path_test_composition + name, bg)
-        # cv.imwrite(trimap_path_test_composition + name, trimap)
+        cv.imwrite(trimap_path_test_composition + name, trimap)
 
         
