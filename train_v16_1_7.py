@@ -14,6 +14,8 @@ from torch.utils.data import BatchSampler, SequentialSampler
 
 
 def train_net(args):
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
     checkpoint = args.checkpoint
     start_epoch = 1
     best_loss = float('inf')
