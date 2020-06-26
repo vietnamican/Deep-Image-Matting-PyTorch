@@ -1,4 +1,5 @@
 .idea
+.ipynb_checkpoints/
 __pycache__/
 BEST_checkpoint.tar
 checkpoint.tar
@@ -16,4 +17,4 @@ checkpoints**/
 data/
 images/
 logs/
-test_image/
+test_images/
