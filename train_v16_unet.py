@@ -6,7 +6,7 @@ import random
 
 from config import device, im_size, grad_clip, print_freq, valid_ratio, num_fgs, num_bgs
 from data_gen_1_7 import DIMDataset
-from models_v16_7 import DIMModel
+from models_unet import DIMModel
 from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
     alpha_prediction_loss, adjust_learning_rate, InvariantSampler, RandomSampler
 from migrate_model import migrate
@@ -28,7 +28,7 @@ def train_net(args):
         torch.random.manual_seed(7)
         torch.cuda.manual_seed(7)
         np.random.seed(7)
-        model = DIMModel(n_classes=1, in_channels=4, is_unpooling=True, pretrain=True)
+        model = DIMModel(n_classes=1, n_channels=4)
         if args.pretrained:
             migrate(model)
         model = nn.DataParallel(model)

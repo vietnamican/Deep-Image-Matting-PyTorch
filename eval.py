@@ -1,5 +1,6 @@
 import os
 import argparse
+import time
 
 import cv2 as cv
 import numpy as np
@@ -7,20 +8,20 @@ import torch
 from torchvision import transforms
 from tqdm import tqdm
 
-from config import device
+# from config import device
 from data_gen import data_transforms
 from utils import ensure_folder, parse_args
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--checkpoint', type=str, default='BEST_checkkpoint.tar')
     parser.add_argument('--output-folder', type=str)
+    parser.add_argument('--device', type=str)
     args = parser.parse_args()
     checkpoint = args.checkpoint
-    checkpoint = torch.load(checkpoint)
+    checkpoint = torch.load(checkpoint,map_location=lambda storage, loc: storage)
     model = checkpoint['model']
-    model = model.to(device)
+    model = model.module.to(args.device)
     model.eval()
     output_folder = args.output_folder
     IMG_FOLDER = 'data/alphamatting/input_lowres'
@@ -38,6 +39,7 @@ if __name__ == '__main__':
 
     files = [f for f in os.listdir(IMG_FOLDER) if f.endswith('.png')]
 
+    start = time.time()
     for file in tqdm(files):
         filename = os.path.join(IMG_FOLDER, file)
         img = cv.imread(filename)
@@ -49,7 +51,6 @@ if __name__ == '__main__':
         image = transforms.ToPILImage()(image)
         image = transformer(image)
         x[0:, 0:3, :, :] = image
-
         for i in range(3):
             filename = os.path.join(TRIMAP_FOLDERS[i], file)
             print('reading {}...'.format(filename))
@@ -60,7 +61,7 @@ if __name__ == '__main__':
             # print(torch.median(x[0:, 3, :, :]))
 
             # Move to GPU, if available
-            x = x.type(torch.FloatTensor).to(device)
+            x = x.type(torch.FloatTensor).to(args.device)
 
             with torch.no_grad():
                 pred = model(x)
@@ -74,5 +75,9 @@ if __name__ == '__main__':
             out = (pred.copy() * 255).astype(np.uint8)
 
             filename = os.path.join(OUTPUT_FOLDERS[i], file)
-            cv.imwrite(filename, out)
+            # cv.imwrite(filename, out)
             print('wrote {}.'.format(filename))
+    end = time.time()
+    print(start)
+    print(end)
+    print(end - start)
