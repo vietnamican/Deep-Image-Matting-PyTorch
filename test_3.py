@@ -12,7 +12,6 @@ from config import device, fg_path_test, a_path_test, bg_path_test, out_path_tes
 from data_gen import data_transforms, fg_test_files, bg_test_files
 from utils import compute_mse, compute_sad, compute_gradient_loss, compute_connectivity_error, AverageMeter, get_logger, draw_str, ensure_folder
 
-
 def gen_test_names():
     num_fgs = 50
     num_bgs = 1000
