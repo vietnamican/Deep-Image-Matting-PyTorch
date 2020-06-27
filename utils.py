@@ -7,12 +7,14 @@ import random
 import cv2 as cv
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch.utils.data import Sampler
 from skimage.measure import label
 import scipy.ndimage
 import scipy.ndimage.morphology
+from torchvision import transforms
 
-from config import im_size, epsilon, epsilon_sqr
+from config import im_size, epsilon, epsilon_sqr, device
 
 
 def clip_gradient(optimizer, grad_clip):
@@ -253,12 +255,23 @@ def compute_connectivity_error(pred, target, trimap, step=0.1):
 # alpha prediction loss: the abosolute difference between the ground truth alpha values and the
 # predicted alpha values at each pixel. However, due to the non-differentiable property of
 # absolute values, we use the following loss function to approximate it.
+def mse_core(pred, true, mask):
+    return F.mse_loss(pred * mask, true * mask, reduction='sum') / (torch.sum(mask) + epsilon)
+
 def alpha_prediction_loss(y_pred, y_true):
-    mask = y_true[:, 1, :]
-    diff = y_pred[:, 0, :] - y_true[:, 0, :]
-    diff = diff * mask
-    num_pixels = torch.sum(mask)
-    return torch.sum(torch.sqrt(torch.pow(diff, 2) + epsilon_sqr)) / (num_pixels + epsilon)
+    mask = y_true[:, 1, :, :]
+    pred = y_pred[:, :, :]
+    true = y_true[:, 0, :, :]
+    return mse_core(pred, true, mask)
+
+def composition_loss(y_pred, y_true, image, fg, bg):
+    mask = y_true[:, 1, :, :]
+    pred = y_pred[:, :, :]
+    true = y_true[:, 0, :, :]
+
+    merged = pred * fg + (1 - pred) * bg
+    return mse_core(merged, image, mask) / 3.
+
 
 
 # compute the MSE error given a prediction, a ground truth and a trimap.

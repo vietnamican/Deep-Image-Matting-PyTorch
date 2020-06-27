@@ -5,10 +5,10 @@ from torch import nn
 import random
 
 from config import device, im_size, grad_clip, print_freq, valid_ratio, num_fgs, num_bgs
-from data_gen_1_7 import DIMDataset
+from data_gen_unet import DIMDataset
 from models_unet import DIMModel
 from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
-    alpha_prediction_loss, adjust_learning_rate, InvariantSampler, RandomSampler
+    alpha_prediction_loss, composition_loss, adjust_learning_rate, InvariantSampler, RandomSampler
 from migrate_model import migrate
 from torch.utils.data import BatchSampler, SequentialSampler
 
@@ -121,19 +121,27 @@ def train(train_loader, model, optimizer, epoch, logger):
     losses = AverageMeter()
 
     # Batches
-    for i, (img, alpha_label) in enumerate(train_loader):
+    for i, (img, alpha_label, image, fg, bg) in enumerate(train_loader):
         # Move to GPU, if available
         img = img.type(torch.FloatTensor).to(device)  # [N, 4, 320, 320]
-        alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 320, 320]
-        alpha_label = alpha_label.reshape((-1, 2, im_size * im_size))  # [N, 320*320]
+        alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 2, 320, 320]
+        # image = np.transpose(image, (0,3,1,2))
+        # fg = np.transpose(fg, (0,3,1,2))
+        # bg = np.transpose(bg, (0,3,1,2))
+        image = image.type(torch.FloatTensor).to(device)
+        fg = fg.type(torch.FloatTensor).to(device)
+        bg = bg.type(torch.FloatTensor).to(device)
 
         # Forward prop.
-        alpha_out = model(img)  # [N, 3, 320, 320]
-        alpha_out = alpha_out.reshape((-1, 1, im_size * im_size))  # [N, 320*320]
+        alpha_out = model(img)  # [N, 320, 320] 
 
         # Calculate loss
         # loss = criterion(alpha_out, alpha_label)
-        loss = alpha_prediction_loss(alpha_out, alpha_label)
+        alpha_loss = alpha_prediction_loss(alpha_out, alpha_label)
+        comp_loss = composition_loss(alpha_out, alpha_label, image, fg, bg)
+        w_l = 0.5
+        loss = w_l * alpha_loss + (1 - w_l) * comp_loss
+        # loss = alpha_loss
 
         # Back prop.
         optimizer.zero_grad()

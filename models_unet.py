@@ -115,7 +115,7 @@ class DIMModel(nn.Module):
         return x
 
 if __name__ == "__main__":
-    model = DIMModel(4,1)
+    model = DIMModel(4,1, bilinear=False)
     model = model.to(device)
 
     summary(model, torch.Tensor(1,4,320,320).to(device))

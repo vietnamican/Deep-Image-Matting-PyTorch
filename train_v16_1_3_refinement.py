@@ -2,9 +2,10 @@ import numpy as np
 import torch
 from tensorboardX import SummaryWriter
 from torch import nn
+import random
 
 from config import device, im_size, grad_clip, print_freq, valid_ratio, num_fgs, num_bgs
-from data_gen_1_3 import DIMDataset
+from data_gen_1_7 import DIMDataset
 from models_v16_4 import DIMModel, RefinementModel
 from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
     alpha_prediction_loss, adjust_learning_rate, InvariantSampler, RandomSampler
@@ -13,7 +14,9 @@ from torch.utils.data import BatchSampler, SequentialSampler
 
 
 def train_net(args):
-    edmodel = torch.load("BEST_checkpoint.tar")
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
+    edmodel = torch.load("checkpoints_1_1_2/checkpoint_62_0.04947672155443191.tar")
     edmodel = edmodel['model']
     checkpoint = args.checkpoint
     start_epoch = 0
@@ -54,6 +57,10 @@ def train_net(args):
             np.random.set_state(checkpoint['np_seed'])
         else:
             np.random.seed(7)
+        if 'python_seed' in checkpoint:
+            random.setstate(checkpoint['python_seed'])
+        else:
+            random.seed(7)
 
     logger = get_logger()
 
@@ -61,11 +68,9 @@ def train_net(args):
     model = model.to(device)
     edmodel = edmodel.to(device)
     train_dataset = DIMDataset('train')
-    train_sample = RandomSampler(train_dataset, num_samples= int(num_fgs * 128))
-    train_loader = torch.utils.data.DataLoader(train_dataset, sampler=train_sample ,batch_size=args.batch_size, num_workers=8, pin_memory=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8, pin_memory=True)
     valid_dataset = DIMDataset('valid')
-    valid_sample = RandomSampler(train_dataset, num_samples= int(valid_ratio * num_fgs) * 128)
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, sampler=valid_sample, batch_size=args.batch_size, num_workers=8, pin_memory=True)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True)
 
     # Epochs
     for epoch in range(start_epoch, args.end_epoch):
