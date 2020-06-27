@@ -168,7 +168,7 @@ def valid(valid_loader, model, epoch, logger):
     losses = AverageMeter()
 
     # Batches
-    for i, (img, alpha_label) in enumerate(valid_loader):
+    for i, (img, alpha_label, _, _, _) in enumerate(valid_loader):
         # Move to GPU, if available
         img = img.type(torch.FloatTensor).to(device)  # [N, 3, 320, 320]
         alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 320, 320]
