@@ -265,10 +265,15 @@ def alpha_prediction_loss(y_pred, y_true):
     return mse_core(pred, true, mask)
 
 def composition_loss(y_pred, y_true, image, fg, bg):
-    mask = y_true[:, 1, :, :]
+    mask = y_true[:, 1:2, :, :]
+    mask = torch.cat((mask, mask, mask), dim=1)
     pred = y_pred[:, :, :]
+    pred = pred.reshape((-1, 1, pred.shape[1], pred.shape[2]))
+    pred = torch.cat((pred, pred, pred), dim=1)
     true = y_true[:, 0, :, :]
-
+    print(pred.shape)
+    print(fg.shape)
+    print(bg.shape)
     merged = pred * fg + (1 - pred) * bg
     return mse_core(merged, image, mask) / 3.
 
