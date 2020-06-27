@@ -125,9 +125,6 @@ def train(train_loader, model, optimizer, epoch, logger):
         # Move to GPU, if available
         img = img.type(torch.FloatTensor).to(device)  # [N, 4, 320, 320]
         alpha_label = alpha_label.type(torch.FloatTensor).to(device)  # [N, 2, 320, 320]
-        # image = np.transpose(image, (0,3,1,2))
-        # fg = np.transpose(fg, (0,3,1,2))
-        # bg = np.transpose(bg, (0,3,1,2))
         image = image.type(torch.FloatTensor).to(device)
         fg = fg.type(torch.FloatTensor).to(device)
         bg = bg.type(torch.FloatTensor).to(device)
@@ -141,7 +138,6 @@ def train(train_loader, model, optimizer, epoch, logger):
         comp_loss = composition_loss(alpha_out, alpha_label, image, fg, bg)
         w_l = 0.5
         loss = w_l * alpha_loss + (1 - w_l) * comp_loss
-        # loss = alpha_loss
 
         # Back prop.
         optimizer.zero_grad()
