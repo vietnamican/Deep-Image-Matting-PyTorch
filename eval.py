@@ -75,7 +75,7 @@ if __name__ == '__main__':
             out = (pred.copy() * 255).astype(np.uint8)
 
             filename = os.path.join(OUTPUT_FOLDERS[i], file)
-            # cv.imwrite(filename, out)
+            cv.imwrite(filename, out)
             print('wrote {}.'.format(filename))
     end = time.time()
     print(start)

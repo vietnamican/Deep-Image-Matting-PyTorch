@@ -1,10 +1,7 @@
 import torch
 import torch.nn as nn
-from torchsummary import summary
 
 from config import device, im_size
-import migrate_model
-
 
 class conv2DBatchNormRelu(nn.Module):
     def __init__(

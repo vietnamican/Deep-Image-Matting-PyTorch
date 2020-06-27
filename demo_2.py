@@ -26,6 +26,7 @@ if __name__ == '__main__':
     parser.add_argument('--trimap', type=str)
     parser.add_argument('--result', type=str)
     parser.add_argument('--rgb-result', type=str)
+    parser.add_argument('--transparent-result', type=str)
     parser.add_argument('--device', type=str)
 
     args = parser.parse_args()
@@ -40,10 +41,14 @@ if __name__ == '__main__':
 
     transformer = data_transforms['valid']
 
-    # files = [f for f in os.listdir(IMG_FOLDER) if f.endswith('.png')]
-
-    # for file in tqdm(files):
     img = cv.imread(args.image)
+    pre_trimap = cv.imread(args.trimap, cv.IMREAD_GRAYSCALE)
+    mask = pre_trimap == 128
+    cnts = cv.findContours(pre_trimap, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+    cv.fillPoly(pre_trimap, cnts, 255)
+    pre_trimap[mask] = 128
+    trimap = pre_trimap
     # print(img.shape)
     h, w = img.shape[:2]
 
@@ -53,7 +58,6 @@ if __name__ == '__main__':
     image = transformer(image)
     x[0:, 0:3, :, :] = image
 
-    trimap = cv.imread(args.trimap, 0)
     x[0:, 3, :, :] = torch.from_numpy(trimap.copy() / 255.)
     # print(torch.max(x[0:, 3, :, :]))
     # print(torch.min(x[0:, 3, :, :]))
@@ -80,3 +84,5 @@ if __name__ == '__main__':
 
     cv.imwrite(args.rgb_result, rgb_image)
     cv.imwrite(args.result, out)
+    out = np.expand_dims(out, 2)
+    cv.imwrite(args.transparent_result, np.concatenate([rgb_image, out], axis=2))
