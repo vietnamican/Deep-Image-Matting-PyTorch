@@ -17,7 +17,7 @@ def train_net(args):
     checkpoint = args.checkpoint
     start_epoch = 1
     best_loss = float('inf')
-    writer = SummaryWriter()
+    writer = SummaryWriter(logdir=args.logdir)
     epochs_since_improvement = 0
     decays_since_improvement = 0
 
