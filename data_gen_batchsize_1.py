@@ -193,20 +193,21 @@ class DIMDataset(Dataset):
             alpha = np.fliplr(alpha)
 
         x = torch.zeros((4, im_size, im_size), dtype=torch.float)
-        img = transforms.ToPILImage()(img)
-        img = self.transformer(img)
-        x[0:3, :, :] = img
+        image = transforms.ToPILImage()(image)
+        image = self.transformer(image)
+        x[0:3, :, :] = image
         x[3, :, :] = torch.from_numpy(trimap.copy() / 255.)
 
         y = np.empty((2, im_size, im_size), dtype=np.float32)
         y[0, :, :] = alpha / 255.
         mask = np.equal(trimap, 128).astype(np.float32)
         y[1, :, :] = mask
-        
+
         return x, y
 
     def __len__(self):
         return len(self.names)
+
 
 def gen_names():
     num_fgs = 431

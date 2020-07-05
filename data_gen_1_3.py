@@ -144,7 +144,6 @@ def gen_trimap(alpha):
     trimap[dilated <= 0] = 0
     return trimap
 
-
 # Randomly crop (image, trimap) pairs centered on pixels in the unknown regions.
 def random_choice(trimap, crop_size=(320, 320)):
     crop_height, crop_width = crop_size
@@ -158,7 +157,6 @@ def random_choice(trimap, crop_size=(320, 320)):
         x = max(0, center_x - int(crop_width / 2))
         y = max(0, center_y - int(crop_height / 2))
     return x, y
-
 
 class DIMDataset(Dataset):
     def __init__(self, split):
