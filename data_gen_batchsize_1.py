@@ -193,9 +193,9 @@ class DIMDataset(Dataset):
             alpha = np.fliplr(alpha)
 
         x = torch.zeros((4, im_size, im_size), dtype=torch.float)
-        image = transforms.ToPILImage()(image)
-        image = self.transformer(image)
-        x[0:3, :, :] = image
+        img = transforms.ToPILImage()(img)
+        img = self.transformer(img)
+        x[0:3, :, :] = img
         x[3, :, :] = torch.from_numpy(trimap.copy() / 255.)
 
         y = np.empty((2, im_size, im_size), dtype=np.float32)
