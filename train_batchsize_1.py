@@ -4,7 +4,7 @@ from tensorboardX import SummaryWriter
 from torch import nn
 import random
 
-from config import device, im_size, grad_clip, print_freq
+from config import device, im_size, grad_clip
 from data_gen_unet import DIMDataset
 from models import DIMModel
 from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
@@ -153,7 +153,7 @@ def train(train_loader, model, optimizer, epoch, logger):
 
         # Print status
 
-        if i % print_freq == 0:
+        if i % args.print_freq == 0:
             status = 'Epoch: [{0}][{1}/{2}]\t' \
                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i, len(train_loader), loss=losses)
             logger.info(status)
@@ -184,7 +184,7 @@ def valid(valid_loader, model, epoch, logger):
         # Keep track of metrics
         losses.update(loss.item())
 
-        if i % print_freq == 0:
+        if i % args.print_freq == 0:
             status = 'Epoch: [{0}][{1}/{2}]\t' \
                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i, len(valid_loader), loss=losses)
             logger.info(status)

@@ -135,6 +135,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train face network')
     # general
     parser.add_argument('--checkpointdir', type=str)
+    parser.add_argument('--print-freq', type=int, default=100)
     parser.add_argument('--logdir', type=str)
     parser.add_argument('--random-interp', type=bool, default=True, help='randomly choose interpolation')
     parser.add_argument('--start-epoch', type=int, default=0, help='start epoch.')
