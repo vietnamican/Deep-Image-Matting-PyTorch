@@ -62,6 +62,8 @@ def composite4(fg, bg, a, w, h):
     if bg_h > h:
         y = np.random.randint(0, bg_h - h)
     bg = np.array(bg[y:y + h, x:x + w], np.float32)
+    cv.imshow("bg", bg.astype(np.uint8))
+    cv.imshow("alpha", a)
     alpha = np.zeros((h, w, 1), np.float32)
     alpha[:, :, 0] = a / 255.
     im = alpha * fg + (1 - alpha) * bg
@@ -188,4 +190,29 @@ def gen_names():
 
 
 if __name__ == "__main__":
-    gen_names()
+    img1, alpha1, fg1, bg1 = process(fg_files[92], bg_files[411 ])
+    h, w = alpha1.shape
+    img2, alpha2, fg2, bg2 = process(fg_files[411], bg_files[2])
+    cv.imshow("fg2-raw", fg2.astype(np.uint8))
+    fg2 = cv.resize(fg2, (w, h), interpolation=cv.INTER_NEAREST)
+    alpha2 = cv.resize(alpha2, (w, h), interpolation=cv.INTER_NEAREST)
+    alpha_tmp = (1 - (1 - alpha1 / 255.0) * (alpha2 / 255.0)) * 255
+    cv.imshow("fg1", fg1.astype(np.uint8))
+    cv.imshow("fg2", fg2.astype(np.uint8))
+    cv.imshow("alpha1", alpha1)
+    # cv.imshow("bg1", bg1.astype(np.uint8))
+    # cv.imshow("bg2", bg2.astype(np.uint8))
+    # cv.imshow("1", img1)
+    # cv.imshow("2", img2)
+    img, alpha, _, _ = composite4(fg1, fg2, alpha_tmp, w, h)
+    alpha = (1 - (1 - alpha1 / 255.0) * (1 - alpha2 / 255.0)) * 255
+    # fg = fg1.astype(np.float32) * alpha_tmp[:,:,None] + fg2.astype(np.float32) * (1 - alpha_tmp[:,:,None])
+    img, alpha, fg, bg = composite4(img, bg1, alpha, w, h)
+    # alpha = alpha_tmp * 255.0
+    fg = fg.astype(np.uint8)
+    cv.imshow("compose", img.astype(np.uint8))
+    cv.imshow("alpha", alpha.astype(np.uint8))
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+    cv.imwrite("alpha.png", alpha.astype(np.uint8))
+    cv.imwrite("compose.png", img.astype(np.uint8))

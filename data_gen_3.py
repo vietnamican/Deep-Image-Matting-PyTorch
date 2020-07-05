@@ -269,3 +269,13 @@ def gen_names():
 
 if __name__ == "__main__":
     gen_names()
+    img1, alpha1, fg1, bg1 = process(1, 0)
+    h, w = alpha1.shape
+    img2, alpha2, fg2, bg2 = process(3, 2)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+    fg2 = cv.resize(fg2, (w, h), interpolation=maybe_random_interp(cv.INTER_NEAREST))
+    alpha2 = cv.resize(alpha2, (w, h), interpolation=maybe_random_interp(cv.INTER_NEAREST))
+    alpha_tmp = 1 - (1 - alpha1 / 255.0) * (1 - alpha2 / 255.0)
+    cv.imshow("1", img1)
+    cv.imshow("2", img2)
