@@ -260,9 +260,9 @@ def mse_core(pred, true, mask):
     return F.mse_loss(pred * mask, true * mask, reduction='sum') / (torch.sum(mask) + epsilon)
 
 def alpha_prediction_loss(y_pred, y_true):
-    mask = y_true[:, 1, :, :]
-    pred = y_pred[:, :, :]
-    true = y_true[:, 0, :, :]
+    mask = y_true[:, 1, :]
+    pred = y_pred[:, 0, :]
+    true = y_true[:, 0, :]
     return mse_core(pred, true, mask)
 
 def composition_loss(y_pred, y_true, image, fg, bg):
