@@ -22,7 +22,7 @@ valid_ratio = 0.2
 num_workers = 1  # for data-loading; right now, only 1 works with h5py
 grad_clip = 5.  # clip gradients at an absolute value of
 checkpoint = None  # path to checkpoint, None if none
-
+print_freq=1
 ##############################################################
 # Set your paths here
 

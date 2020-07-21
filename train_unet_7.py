@@ -2,19 +2,20 @@ import numpy as np
 import torch
 from tensorboardX import SummaryWriter
 from torch import nn
+import random
 
-from config import device, im_size, grad_clip, print_freq, valid_ratio, num_fgs, num_bgs
-from data_gen_1 import DIMDataset
-from models_v16_4 import DIMModel
+from config import device, im_size, grad_clip
+from data_gen_unet_7 import DIMDataset
+from model import DIMModel
 from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
-    alpha_prediction_loss, adjust_learning_rate, InvariantSampler, RandomSampler
-from migrate_model import migrate
-from torch.utils.data import BatchSampler, SequentialSampler
+    alpha_prediction_loss, adjust_learning_rate
 
 
 def train_net(args):
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
     checkpoint = args.checkpoint
-    start_epoch = 0
+    start_epoch = 1
     best_loss = float('inf')
     writer = SummaryWriter(logdir=args.logdir)
     epochs_since_improvement = 0
@@ -23,10 +24,10 @@ def train_net(args):
     # Initialize / load checkpoint
     if checkpoint is None:
         torch.random.manual_seed(7)
+        torch.cuda.manual_seed(7)
         np.random.seed(7)
-        model = DIMModel(n_classes=1, in_channels=4, is_unpooling=True, pretrain=True)
-        if args.pretrained:
-            migrate(model)
+        random.seed(7)
+        model = DIMModel()
         model = nn.DataParallel(model)
 
         if args.optimizer == 'sgd':
@@ -34,39 +35,51 @@ def train_net(args):
                                         weight_decay=args.weight_decay)
         else:
             optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-        start_epoch = args.start_epoch
+
     else:
         checkpoint = torch.load(checkpoint)
         start_epoch = checkpoint['epoch'] + 1
         epochs_since_improvement = checkpoint['epochs_since_improvement']
-        model = checkpoint['model']
+        model = checkpoint['model'].module
         optimizer = checkpoint['optimizer']
         if 'torch_seed' in checkpoint:
             torch.random.set_rng_state(checkpoint['torch_seed'])
         else:
             torch.random.manual_seed(7)
+        if 'torch_cuda_seed' in checkpoint:
+            torch.cuda.set_rng_state(checkpoint['torch_cuda_seed'])
+        else:
+            torch.cuda.manual_seed(7)
         if 'np_seed' in checkpoint:
             np.random.set_state(checkpoint['np_seed'])
         else:
             np.random.seed(7)
+        if 'python_seed' in checkpoint:
+            random.setstate(checkpoint['python_seed'])
+        else:
+            random.seed(7)
 
     logger = get_logger()
 
     # Move to GPU, if available
     model = model.to(device)
+
+    # Custom dataloaders
     train_dataset = DIMDataset('train')
-    train_sample = RandomSampler(train_dataset, num_samples= int(num_fgs * args.batch_size * 8))
-    train_loader = torch.utils.data.DataLoader(train_dataset, sampler=train_sample ,batch_size=args.batch_size, num_workers=8, pin_memory=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=8)
     valid_dataset = DIMDataset('valid')
-    valid_sample = RandomSampler(train_dataset, num_samples= int(valid_ratio * num_fgs) * args.batch_size * 8)
-    valid_loader = torch.utils.data.DataLoader(valid_dataset, sampler=valid_sample, batch_size=args.batch_size, num_workers=8, pin_memory=True)
+    valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8)
 
     # Epochs
     for epoch in range(start_epoch, args.end_epoch):
-        if args.optimizer == 'sgd' and epochs_since_improvement == 20:
+        if args.optimizer == 'sgd' and epochs_since_improvement == 10:
             break
 
-        if args.optimizer == 'sgd' and epochs_since_improvement > 0 and epochs_since_improvement % 10 == 0:
+        if args.optimizer == 'sgd' and epochs_since_improvement > 0 and epochs_since_improvement % 2 == 0:
+            checkpoint = 'BEST_checkpoint.tar'
+            checkpoint = torch.load(checkpoint)
+            model = checkpoint['model']
+            optimizer = checkpoint['optimizer']
             decays_since_improvement += 1
             print("\nDecays since last improvement: %d\n" % (decays_since_improvement,))
             adjust_learning_rate(optimizer, 0.6 ** decays_since_improvement)
@@ -102,7 +115,7 @@ def train_net(args):
             decays_since_improvement = 0
 
         # Save checkpoint
-        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, args.checkpointdir, np_seed = np.random.get_state(), torch_seed = torch.random.get_rng_state())
+        save_checkpoint(epoch, epochs_since_improvement, model, optimizer, best_loss, is_best, args.checkpointdir)
 
 
 def train(train_loader, model, optimizer, epoch, logger):
@@ -140,7 +153,7 @@ def train(train_loader, model, optimizer, epoch, logger):
 
         # Print status
 
-        if i % print_freq == 0:
+        if i % args.print_freq == 0:
             status = 'Epoch: [{0}][{1}/{2}]\t' \
                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i, len(train_loader), loss=losses)
             logger.info(status)
@@ -171,10 +184,11 @@ def valid(valid_loader, model, epoch, logger):
         # Keep track of metrics
         losses.update(loss.item())
 
-        if i % print_freq == 0:
+        if i % args.print_freq == 0:
             status = 'Epoch: [{0}][{1}/{2}]\t' \
                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(epoch, i, len(valid_loader), loss=losses)
             logger.info(status)
+
     # Print status
     status = 'Validation: Loss {loss.avg:.4f}\n'.format(loss=losses)
 
