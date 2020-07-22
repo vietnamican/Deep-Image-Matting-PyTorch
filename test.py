@@ -135,7 +135,7 @@ if __name__ == '__main__':
         # Move to GPU, if available
         x = x.type(torch.FloatTensor).to(args.device)  # [1, 4, 320, 320]
         alpha = alpha / 255.
-        if x[2] > 800 and x[3] > 800:
+        if x.shape[2] > 800 and x.shape[3] > 800:
             PATCH_SIZE = 320
             patches = create_patches(x, PATCH_SIZE)
             patches_count = np.product(
