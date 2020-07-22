@@ -347,26 +347,27 @@ def patch_dims(mat_size, patch_size):
 
 
 def create_patches(mat, patch_size):
+    mat = mat.cpu()
     mat_size = mat.shape
-    assert len(mat_size) == 3, "Input mat need to have 4 channels (R, G, B, trimap)"
-    assert mat_size[-1] == 4, "Input mat need to have 4 channels (R, G, B, trimap)"
+    assert len(mat_size) == 4, "Input mat need to have 4 channels (R, G, B, trimap)"
+    assert mat_size[1] == 4, "Input mat need to have 4 channels (R, G, B, trimap)"
 
-    patches_dim = patch_dims(mat_size=mat_size[:2], patch_size=patch_size)
+    patches_dim = patch_dims(mat_size=mat_size[2:], patch_size=patch_size)
     patches_count = np.product(patches_dim)
 
-    patches = np.zeros(shape=(patches_count, patch_size, patch_size, 4), dtype=np.float32)
+    patches = np.zeros(shape=(patches_count, 4, patch_size, patch_size), dtype=np.float32)
     for y in range(patches_dim[0]):
         y_start = y * patch_size
         for x in range(patches_dim[1]):
             x_start = x * patch_size
 
             # extract patch from input mat
-            single_patch = mat[y_start: y_start + patch_size, x_start: x_start + patch_size, :]
-
+            single_patch = mat[:, :, y_start: y_start + patch_size, x_start: x_start + patch_size]
+            print(type(mat))
             # zero pad patch in bottom and right side if real patch size is smaller than patch size
-            real_patch_h, real_patch_w = single_patch.shape[:2]
+            real_patch_h, real_patch_w = single_patch.shape[2:]
             patch_id = y + x * patches_dim[0]
-            patches[patch_id, :real_patch_h, :real_patch_w, :] = single_patch
+            patches[patch_id, :, :real_patch_h, :real_patch_w] = single_patch
 
     return patches
 

@@ -135,22 +135,27 @@ if __name__ == '__main__':
         # Move to GPU, if available
         x = x.type(torch.FloatTensor).to(args.device)  # [1, 4, 320, 320]
         alpha = alpha / 255.
-        if x.shape[2] > 800 and x.shape[3] > 800:
+
+        if x.shape[2] > 5800 and x.shape[3] > 5800:
             PATCH_SIZE = 320
+            # print(x.shape)
             patches = create_patches(x, PATCH_SIZE)
             patches_count = np.product(
-                patch_dims(mat_size=trimap.shape, patch_size=PATCH_SIZE)
+                patch_dims(mat_size=new_trimap.shape, patch_size=PATCH_SIZE)
             )
             patches_predictions = np.zeros(shape=(patches_count, PATCH_SIZE, PATCH_SIZE))
-
+            patches = torch.Tensor(patches).cuda()
             for i in range(patches.shape[0]):
                 print("Predicting patches {}/{}".format(i + 1, patches_count))
                 with torch.no_grad():
-                    patch_prediction = model(np.expand_dims(patches[i, :, :, :], axis=0))
-                patches_predictions[i] = np.reshape(patch_prediction, (PATCH_SIZE, PATCH_SIZE)) * 255.
-
-            pred = assemble_patches(patches_predictions, trimap.shape, PATCH_SIZE)
-            pred = pred[:x[2], :x[3]]
+                    print(patches[i, None, :, :, :].shape)
+                    patch_prediction = model(patches[i, None, :, :, :])
+                    print("patch_prediction", patch_prediction.shape)
+                patches_predictions[i] = np.reshape(patch_prediction.cpu(), (PATCH_SIZE, PATCH_SIZE)) * 255.
+            print(patches_predictions.shape)
+            pred = assemble_patches(patches_predictions, new_trimap.shape, PATCH_SIZE)
+            pred = pred[:x.shape[2], :x.shape[3]]
+            pred = torch.Tensor(pred)
         else:
             with torch.no_grad():
                 pred = model(x)  # [1, 4, 320, 320]
