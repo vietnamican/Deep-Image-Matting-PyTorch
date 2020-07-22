@@ -46,6 +46,7 @@ def save_checkpoint(epoch, epochs_since_improvement, model, optimizer, loss, is_
     if is_best:
         torch.save(state, logdir + '/BEST_checkpoint.tar')
 
+
 def save_checkpoint_2(epoch, epochs_since_improvement, model, optimizer, loss, is_best):
     state = {'epoch': epoch,
              'epochs_since_improvement': epochs_since_improvement,
@@ -58,6 +59,7 @@ def save_checkpoint_2(epoch, epochs_since_improvement, model, optimizer, loss, i
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
         torch.save(state, 'checkpoints_2/BEST_checkpoint.tar')
+
 
 def save_checkpoint_4(epoch, epochs_since_improvement, model, optimizer, loss, is_best):
     state = {'epoch': epoch,
@@ -72,6 +74,7 @@ def save_checkpoint_4(epoch, epochs_since_improvement, model, optimizer, loss, i
     if is_best:
         torch.save(state, 'checkpoints_4/BEST_checkpoint.tar')
 
+
 def save_checkpoint_5(epoch, epochs_since_improvement, model, optimizer, loss, is_best):
     state = {'epoch': epoch,
              'epochs_since_improvement': epochs_since_improvement,
@@ -84,6 +87,7 @@ def save_checkpoint_5(epoch, epochs_since_improvement, model, optimizer, loss, i
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
         torch.save(state, 'checkpoints_5/BEST_checkpoint.tar')
+
 
 class AverageMeter(object):
     """
@@ -179,6 +183,7 @@ def safe_crop(mat, x, y, crop_size=(im_size, im_size)):
         ret = cv.resize(ret, dsize=(im_size, im_size), interpolation=cv.INTER_NEAREST)
     return ret
 
+
 def gauss(x, sigma):
     y = np.exp(-x ** 2 / (2 * sigma ** 2)) / (sigma * np.sqrt(2 * np.pi))
     return y
@@ -209,7 +214,6 @@ def gaussgradient(im, sigma):
 
 
 def compute_gradient_loss(pred, target, trimap):
-
     pred_x, pred_y = gaussgradient(pred, 1.4)
     target_x, target_y = gaussgradient(target, 1.4)
 
@@ -229,7 +233,6 @@ def getLargestCC(segmentation):
 
 
 def compute_connectivity_error(pred, target, trimap, step=0.1):
-
     # pred = pred / 255.0
     # target = target / 255.0
     h, w = pred.shape
@@ -254,17 +257,20 @@ def compute_connectivity_error(pred, target, trimap, step=0.1):
 
     return loss / 1000.
 
+
 # alpha prediction loss: the abosolute difference between the ground truth alpha values and the
 # predicted alpha values at each pixel. However, due to the non-differentiable property of
 # absolute values, we use the following loss function to approximate it.
 def mse_core(pred, true, mask):
     return F.mse_loss(pred * mask, true * mask, reduction='sum') / (torch.sum(mask) + epsilon)
 
+
 def alpha_prediction_loss(y_pred, y_true):
     mask = y_true[:, 1, :]
     pred = y_pred[:, 0, :]
     true = y_true[:, 0, :]
     return mse_core(pred, true, mask)
+
 
 def composition_loss(y_pred, y_true, image, fg, bg):
     mask = y_true[:, 1:2, :, :]
@@ -275,7 +281,6 @@ def composition_loss(y_pred, y_true, image, fg, bg):
     true = y_true[:, 0, :, :]
     merged = pred * fg + (1 - pred) * bg
     return mse_core(merged, image, mask) / 3.
-
 
 
 # compute the MSE error given a prediction, a ground truth and a trimap.
@@ -305,7 +310,10 @@ def ensure_folder(folder):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
+
 interp_list = [cv.INTER_NEAREST, cv.INTER_LINEAR, cv.INTER_CUBIC, cv.INTER_LANCZOS4]
+
+
 def maybe_random_interp(cv2_interp):
     if np.random.rand() < 0.5:
         return np.random.choice(interp_list)
@@ -320,17 +328,61 @@ split_ratio = 0.2
 out_names_train = 0
 out_names_valid = 0
 
+
 def split_name(split, num, split_index):
-    if(split == 'train'):
+    if (split == 'train'):
         names = np.arange(num)
         np.random.shuffle(names)
         names_train = names[:split_index]
         names_valid = names[split_index:]
-        global out_names_train 
+        global out_names_train
         out_names_train = names_train
         global out_names_valid
         out_names_valid = names_valid
     return out_names_train, out_names_valid
+
+
+def patch_dims(mat_size, patch_size):
+    return np.ceil(np.array(mat_size) / patch_size).astype(int)
+
+
+def create_patches(mat, patch_size):
+    mat_size = mat.shape
+    assert len(mat_size) == 3, "Input mat need to have 4 channels (R, G, B, trimap)"
+    assert mat_size[-1] == 4, "Input mat need to have 4 channels (R, G, B, trimap)"
+
+    patches_dim = patch_dims(mat_size=mat_size[:2], patch_size=patch_size)
+    patches_count = np.product(patches_dim)
+
+    patches = np.zeros(shape=(patches_count, patch_size, patch_size, 4), dtype=np.float32)
+    for y in range(patches_dim[0]):
+        y_start = y * patch_size
+        for x in range(patches_dim[1]):
+            x_start = x * patch_size
+
+            # extract patch from input mat
+            single_patch = mat[y_start: y_start + patch_size, x_start: x_start + patch_size, :]
+
+            # zero pad patch in bottom and right side if real patch size is smaller than patch size
+            real_patch_h, real_patch_w = single_patch.shape[:2]
+            patch_id = y + x * patches_dim[0]
+            patches[patch_id, :real_patch_h, :real_patch_w, :] = single_patch
+
+    return patches
+
+
+def assemble_patches(pred_patches, mat_size, patch_size):
+    patch_dim_h, patch_dim_w = patch_dims(mat_size=mat_size, patch_size=patch_size)
+    result = np.zeros(shape=(patch_size * patch_dim_h, patch_size * patch_dim_w), dtype=np.uint8)
+    patches_count = pred_patches.shape[0]
+
+    for i in range(patches_count):
+        y = (i % patch_dim_h) * patch_size
+        x = int(math.floor(i / patch_dim_h)) * patch_size
+
+        result[y:y + patch_size, x:x + patch_size] = pred_patches[i]
+
+    return result
 
 
 class InvariantSampler(Sampler):
@@ -339,8 +391,9 @@ class InvariantSampler(Sampler):
         self.data_source = data_source
         self.split = split
         self.batch_size = batch_size
+
     def generate(self):
-        names_train, names_valid = split_name(self.split, num_fgs * 8, math.ceil(num_fgs * (1-split_ratio)) * 8)
+        names_train, names_valid = split_name(self.split, num_fgs * 8, math.ceil(num_fgs * (1 - split_ratio)) * 8)
         if self.split == 'train':
             names = names_train
         else:
@@ -348,17 +401,20 @@ class InvariantSampler(Sampler):
         np.random.shuffle(names)
         names = names * self.batch_size
         names = np.expand_dims(names, 1)
-        reduces  = np.copy(names)
+        reduces = np.copy(names)
         for i in np.arange(1, self.batch_size):
             temp = names + i
             reduces = np.concatenate([reduces, temp], axis=1)
         reduces = reduces.reshape(-1)
         return np.asarray(reduces)
+
     def __iter__(self):
         self.names = self.generate()
         return iter(self.names)
+
     def __len__(self):
-        return len(self.names)  
+        return len(self.names)
+
 
 class RandomSampler(Sampler):
     def __init__(self, data_source, replacement=False, num_samples=None):

@@ -9,7 +9,8 @@ from tqdm import tqdm
 
 from config import device, fg_path_test, a_path_test, bg_path_test
 from data_gen import data_transforms, fg_test_files, bg_test_files
-from utils import compute_mse, compute_sad, compute_gradient_loss, compute_connectivity_error, AverageMeter, get_logger, draw_str, ensure_folder
+from utils import compute_mse, compute_sad, compute_gradient_loss, compute_connectivity_error, AverageMeter, get_logger, \
+    draw_str, ensure_folder, create_patches, assemble_patches, patch_dims
 
 
 def gen_test_names():
@@ -41,23 +42,6 @@ def process_test(im_name, bg_name, trimap):
         bg = cv.resize(src=bg, dsize=(math.ceil(bw * ratio), math.ceil(bh * ratio)), interpolation=cv.INTER_CUBIC)
 
     return composite4_test(im, bg, a, w, h, trimap)
-
-
-# def composite4_test(fg, bg, a, w, h):
-#     fg = np.array(fg, np.float32)
-#     bg_h, bg_w = bg.shape[:2]
-#     x = max(0, int((bg_w - w)/2))
-#     y = max(0, int((bg_h - h)/2))
-#     bg = np.array(bg[y:y + h, x:x + w], np.float32)
-#     alpha = np.zeros((h, w, 1), np.float32)
-#     alpha[:, :, 0] = a / 255.
-#     im = alpha * fg + (1 - alpha) * bg
-#     im = im.astype(np.uint8)
-#     print('im.shape: ' + str(im.shape))
-#     print('a.shape: ' + str(a.shape))
-#     print('fg.shape: ' + str(fg.shape))
-#     print('bg.shape: ' + str(bg.shape))
-#     return im, a, fg, bg
 
 
 def composite4_test(fg, bg, a, w, h, trimap):
@@ -92,10 +76,10 @@ if __name__ == '__main__':
     parser.add_argument('--output-folder', type=str)
     parser.add_argument('--device', type=str)
     args = parser.parse_args()
-    ensure_folder('images' )
-    ensure_folder('images/test' )
-    ensure_folder('images/test/out' )
-    ensure_folder('images/test/out/' + args.output_folder )
+    ensure_folder('images')
+    ensure_folder('images/test')
+    ensure_folder('images/test/out')
+    ensure_folder('images/test/out/' + args.output_folder)
     ensure_folder('images/test/out/' + args.output_folder + '/Trimap1')
     ensure_folder('images/test/out/' + args.output_folder + '/Trimap2')
     ensure_folder('images/test/out/' + args.output_folder + '/Trimap3')
@@ -130,7 +114,7 @@ if __name__ == '__main__':
         trimap_name = im_name.split('.')[0] + '_' + str(i) + '.png'
         # print('trimap_name: ' + str(trimap_name))
 
-        trimap = cv.imread('data/Combined_Dataset/Test_set/Adobe-licensed images/trimaps/' + trimap_name, 0) 
+        trimap = cv.imread('data/Combined_Dataset/Test_set/Adobe-licensed images/trimaps/' + trimap_name, 0)
         # print('trimap: ' + str(trimap))
 
         i += 1
@@ -148,20 +132,34 @@ if __name__ == '__main__':
         img = transformer(img)  # [3, 320, 320]
         x[0:, 0:3, :, :] = img
         x[0:, 3, :, :] = torch.from_numpy(new_trimap.copy() / 255.)
-
         # Move to GPU, if available
         x = x.type(torch.FloatTensor).to(args.device)  # [1, 4, 320, 320]
         alpha = alpha / 255.
+        if x[2] > 800 and x[3] > 800:
+            PATCH_SIZE = 320
+            patches = create_patches(x, PATCH_SIZE)
+            patches_count = np.product(
+                patch_dims(mat_size=trimap.shape, patch_size=PATCH_SIZE)
+            )
+            patches_predictions = np.zeros(shape=(patches_count, PATCH_SIZE, PATCH_SIZE))
 
-        with torch.no_grad():
-            pred = model(x)  # [1, 4, 320, 320]
+            for i in range(patches.shape[0]):
+                print("Predicting patches {}/{}".format(i + 1, patches_count))
+                with torch.no_grad():
+                    patch_prediction = model(np.expand_dims(patches[i, :, :, :], axis=0))
+                patches_predictions[i] = np.reshape(patch_prediction, (PATCH_SIZE, PATCH_SIZE)) * 255.
+
+            pred = assemble_patches(patches_predictions, trimap.shape, PATCH_SIZE)
+            pred = pred[:x[2], :x[3]]
+        else:
+            with torch.no_grad():
+                pred = model(x)  # [1, 4, 320, 320]
 
         pred = pred.cpu().numpy()
         pred = pred.reshape((h, w))  # [320, 320]
 
         pred[new_trimap == 0] = 0.0
         pred[new_trimap == 255] = 1.0
-
 
         # Calculate loss
         # loss = criterion(alpha_out, alpha_label)
@@ -175,12 +173,18 @@ if __name__ == '__main__':
         sad_losses.update(sad_loss.item())
         gradient_losses.update(gradient_loss)
         connectivity_losses.update(connectivity_loss)
-        print("sad:{} mse:{} gradient: {} connectivity: {}".format(sad_loss.item(), mse_loss.item(), gradient_loss, connectivity_loss))
-        f.write("sad:{} mse:{} gradient: {} connectivity: {}".format(sad_loss.item(), mse_loss.item(), gradient_loss, connectivity_loss) + "\n")
+        print("sad:{} mse:{} gradient: {} connectivity: {}".format(sad_loss.item(), mse_loss.item(), gradient_loss,
+                                                                   connectivity_loss))
+        f.write("sad:{} mse:{} gradient: {} connectivity: {}".format(sad_loss.item(), mse_loss.item(), gradient_loss,
+                                                                     connectivity_loss) + "\n")
 
         pred = (pred.copy() * 255).astype(np.uint8)
         draw_str(pred, (10, 20), "sad:{} mse:{}".format(sad_loss.item(), mse_loss.item()))
-        cv.imwrite('images/test/out/' + args.output_folder + '/' + trimap_name, pred )
-        
-    print("sad_avg:{} mse_avg:{} gradient_avg: {} connectivity_avg: {}".format(sad_losses.avg, mse_losses.avg, gradient_losses.avg, connectivity_losses.avg))
-    f.write("sad:{} mse:{} gradient_avg: {} connectivity_avg: {}".format(sad_losses.avg, mse_losses.avg, gradient_losses.avg, connectivity_losses.avg) + "\n")
+        cv.imwrite('images/test/out/' + args.output_folder + '/' + trimap_name, pred)
+
+    print("sad_avg:{} mse_avg:{} gradient_avg: {} connectivity_avg: {}".format(sad_losses.avg, mse_losses.avg,
+                                                                               gradient_losses.avg,
+                                                                               connectivity_losses.avg))
+    f.write("sad:{} mse:{} gradient_avg: {} connectivity_avg: {}".format(sad_losses.avg, mse_losses.avg,
+                                                                         gradient_losses.avg,
+                                                                         connectivity_losses.avg) + "\n")
