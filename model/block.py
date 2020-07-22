@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.nn import Conv2d, ReLU, BatchNorm2d, UpsamplingNearest2d
+from torch.nn import Conv2d, ReLU, BatchNorm2d, UpsamplingNearest2d, ConvTranspose2d
 from torchsummaryX import summary
 
 from .conv_relu_bn import ConvReluBatchnorm
@@ -61,18 +61,25 @@ class Block(nn.Module):
 
 
 class UpBlock(nn.Module):
-    def __init__(self, size, in_channels, out_channels, kernel_size=3, stride=1, padding=1, with_depthwise=True,
-                 grow_first=True):
+    def __init__(self, scale_factor, in_channels, out_channels, kernel_size=3, stride=1, padding=1, with_depthwise=True,
+                 grow_first=True, use_transpose_conv=False):
         super(UpBlock, self).__init__()
-
-        self.up = UpsamplingNearest2d(size=(size, size))
+        if use_transpose_conv:
+            self.up = ConvTranspose2d(in_channels, in_channels, kernel_size=2, stride=2)
+        else:
+            self.up = UpsamplingNearest2d(scale_factor=scale_factor)
 
         self.block = Block(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride,
                            padding=padding, with_depthwise=with_depthwise, grow_first=grow_first)
 
-    def forward(self, x):
+    def forward(self, x, size):
         x = self.up(x)
+        original_h, original_w = size
+        output_h, output_w = x.shape[2:4]
+        diff_h = original_h - output_h
+        diff_w = original_w - output_w
+        x = F.pad(x, [diff_w // 2, diff_w - diff_w // 2,
+                      diff_h // 2, diff_h - diff_h // 2])
         x = self.block(x)
 
         return x
-

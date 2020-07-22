@@ -50,25 +50,27 @@ class DIMModel(nn.Module):
         self.down5_conv2 = Block(512, 512, 3, 1, 1)  # 10
         self.down5_conv3 = Block(512, 512, 3, 1, 1)  # 10
 
-        self.up5_conv1 = UpBlock(20, 512, 256, 3, 1, 1)  # 20 256
+        self.up5_conv1 = UpBlock(2, 512, 256, 3, 1, 1)  # 20 256
+        self.up5_conv2 = Block(256, 256, 3, 1, 1)  # 20 256
         self.up5_conv2 = Block(256, 256, 3, 1, 1)  # 20 256
 
-        self.up4_conv1 = UpBlock(40, 256, 128, 3, 1, 1)  # 40 128
+        self.up4_conv1 = UpBlock(2, 256, 128, 3, 1, 1)  # 40 128
         self.up4_conv2 = Block(128, 128, 3, 1, 1)  # 40 128
         self.up4_conv3 = Block(128, 128, 3, 1, 1)  # 40
 
-        self.up3_conv1 = UpBlock(80, 128, 64, 3, 1, 1)  # 80
+        self.up3_conv1 = UpBlock(2, 128, 64, 3, 1, 1)  # 80
         self.up3_conv2 = Block(64, 64, 3, 1, 1)  # 80
         self.up3_conv3 = Block(64, 64, 3, 1, 1)  # 80
 
-        self.up2_conv1 = UpBlock(160, 64, 32, 3, 1, 1)  # 160
+        self.up2_conv1 = UpBlock(2, 64, 32, 3, 1, 1)  # 160
         self.up2_conv2 = Block(32, 32, 3, 1, 1)  # 160
 
-        self.up1_conv1 = UpBlock(320, 32, 32, 3, 1, 1)  # 320
+        self.up1_conv1 = UpBlock(2, 32, 32, 3, 1, 1, use_transpose_conv=True)  # 320
         self.up1_conv2 = Block(32, 32, 3, 1, 1)  # 320
 
         self.lastconv = Sequential(
-            Block(32, 64, 3, 1, 1, with_depthwise=False), Block(64, 64, 3, 1, 1, with_depthwise=False), Block(64, 1, 3, 1, 1, with_depthwise=False)
+            Block(32, 64, 3, 1, 1, with_depthwise=False), Block(64, 64, 3, 1, 1, with_depthwise=False),
+            Block(64, 1, 3, 1, 1, with_depthwise=False)
         )
 
         self.sigmoid = Sigmoid()
@@ -102,29 +104,29 @@ class DIMModel(nn.Module):
         x = self.down5_conv2(x)
         x = self.down5_conv3(x)
 
-        x = self.up5_conv1(x)
+        x = self.up5_conv1(x, s5.shape[2:4])
         x = self.up5_conv2(x)
 
         x = x + s5
 
-        x = self.up4_conv1(x)
+        x = self.up4_conv1(x, s4.shape[2:4])
         x = self.up4_conv2(x)
         x = self.up4_conv2(x)
 
         x = x + s4
 
-        x = self.up3_conv1(x)
+        x = self.up3_conv1(x, s3.shape[2:4])
         x = self.up3_conv2(x)
         x = self.up3_conv2(x)
 
         x = x + s3
 
-        x = self.up2_conv1(x)
+        x = self.up2_conv1(x, s2.shape[2:4])
         x = self.up2_conv2(x)
 
         x = x + s2
 
-        x = self.up1_conv1(x)
+        x = self.up1_conv1(x, s1.shape[2:4])
         x = self.up1_conv2(x)
 
         x = x + s1
