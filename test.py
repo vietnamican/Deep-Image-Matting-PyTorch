@@ -180,8 +180,8 @@ if __name__ == '__main__':
         # Keep track of metrics
         mse_losses.update(mse_loss.item())
         sad_losses.update(sad_loss.item())
-        gradient_losses.update(gradient_loss)
-        connectivity_losses.update(connectivity_loss)
+        gradient_losses.update(gradient_loss.item())
+        connectivity_losses.update(connectivity_loss.item())
         print("sad:{} mse:{} gradient: {} connectivity: {}".format(sad_loss.item(), mse_loss.item(), gradient_loss,
                                                                    connectivity_loss))
         f.write("sad:{} mse:{} gradient: {} connectivity: {}".format(sad_loss.item(), mse_loss.item(), gradient_loss,
