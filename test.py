@@ -7,13 +7,13 @@ import torch
 from torchvision import transforms
 from tqdm import tqdm
 
-from config import device, fg_path_test, a_path_test, bg_path_test
+# from config import device, fg_path_test, a_path_test, bg_path_test
 from data_gen import data_transforms, fg_test_files, bg_test_files
 from utils import compute_mse, compute_sad, compute_gradient_loss, compute_connectivity_error, AverageMeter, get_logger, \
     draw_str, ensure_folder, create_patches, assemble_patches, patch_dims
 
 
-def gen_test_names():
+def gen_test_names(args):
     num_fgs = 50
     num_bgs = 1000
     num_bgs_per_fg = 20
@@ -28,12 +28,13 @@ def gen_test_names():
     return names
 
 
-def process_test(im_name, bg_name, trimap):
-    # print(bg_path_test + bg_name)
-    im = cv.imread(fg_path_test + im_name)
-    a = cv.imread(a_path_test + im_name, 0)
+def process_test(im_name, bg_name, trimap, args):
+    print(args.fg_path + im_name)
+    im = cv.imread(args.fg_path + im_name)
+    print(args.a_path + im_name)
+    a = cv.imread(args.a_path + im_name, 0)
     h, w = im.shape[:2]
-    bg = cv.imread(bg_path_test + bg_name)
+    bg = cv.imread(args.bg_path + bg_name)
     bh, bw = bg.shape[:2]
     wratio = w / bw
     hratio = h / bh
@@ -41,10 +42,10 @@ def process_test(im_name, bg_name, trimap):
     if ratio > 1:
         bg = cv.resize(src=bg, dsize=(math.ceil(bw * ratio), math.ceil(bh * ratio)), interpolation=cv.INTER_CUBIC)
 
-    return composite4_test(im, bg, a, w, h, trimap)
+    return composite4_test(im, bg, a, w, h, trimap, args)
 
 
-def composite4_test(fg, bg, a, w, h, trimap):
+def composite4_test(fg, bg, a, w, h, trimap, args):
     fg = np.array(fg, np.float32)
     bg_h, bg_w = bg.shape[:2]
     x = max(0, int((bg_w - w) / 2))
@@ -75,14 +76,17 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint', type=str, default='BEST_checkkpoint.tar')
     parser.add_argument('--output-folder', type=str)
     parser.add_argument('--device', type=str)
+    parser.add_argument('--bg-path', type=str)
+    parser.add_argument('--fg-path', type=str)
+    parser.add_argument('--a-path', type=str)
     args = parser.parse_args()
     ensure_folder('images')
     ensure_folder('images/test')
     ensure_folder('images/test/out')
     ensure_folder('images/test/out/' + args.output_folder)
-    ensure_folder('images/test/out/' + args.output_folder + '/Trimap1')
-    ensure_folder('images/test/out/' + args.output_folder + '/Trimap2')
-    ensure_folder('images/test/out/' + args.output_folder + '/Trimap3')
+    # ensure_folder('images/test/out/' + args.output_folder + '/Trimap1')
+    # ensure_folder('images/test/out/' + args.output_folder + '/Trimap2')
+    # ensure_folder('images/test/out/' + args.output_folder + '/Trimap3')
     f = open(args.file, "w")
 
     checkpoint = args.checkpoint
@@ -96,7 +100,7 @@ if __name__ == '__main__':
 
     transformer = data_transforms['valid']
 
-    names = gen_test_names()
+    names = gen_test_names(args)
 
     mse_losses = AverageMeter()
     sad_losses = AverageMeter()
@@ -121,7 +125,7 @@ if __name__ == '__main__':
         if i == 20:
             i = 0
 
-        img, alpha, fg, bg, new_trimap = process_test(im_name, bg_name, trimap)
+        img, alpha, fg, bg, new_trimap = process_test(im_name, bg_name, trimap, args)
         h, w = img.shape[:2]
         # mytrimap = gen_trimap(alpha)
         # cv.imwrite('images/test/new_im/'+trimap_name,mytrimap)
