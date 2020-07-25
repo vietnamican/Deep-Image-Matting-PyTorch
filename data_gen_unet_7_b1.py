@@ -182,7 +182,7 @@ class DIMDataset(Dataset):
         img, alpha, fg, bg = process(fcount, bcount)
 
         # crop size 320:640:480 = 1:1:1
-        different_sizes = [(512, 512), (768, 768), (1024, 1024)]
+        different_sizes = [(320, 320), (480, 480), (640, 640)]
         crop_size = random.choice(different_sizes)
 
         trimap = gen_trimap(alpha)

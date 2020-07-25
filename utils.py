@@ -29,12 +29,29 @@ def clip_gradient(optimizer, grad_clip):
                 param.grad.data.clamp_(-grad_clip, grad_clip)
 
 
+# def save_checkpoint(epoch, epochs_since_improvement, model, optimizer, loss, is_best, logdir):
+#     state = {'epoch': epoch,
+#              'epochs_since_improvement': epochs_since_improvement,
+#              'loss': loss,
+#              'model': model,
+#              'optimizer': optimizer,
+#              'torch_seed': torch.get_rng_state(),
+#              'torch_cuda_seed': torch.cuda.get_rng_state(),
+#              'np_seed': np.random.get_state(),
+#              'python_seed': random.getstate()}
+#     filename = logdir + '/checkpoint_' + str(epoch) + '_' + str(loss) + '.tar'
+#     # filename = 'checkpoint.tar'
+#     torch.save(state, filename)
+#     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
+#     if is_best:
+#         torch.save(state, logdir + '/BEST_checkpoint.tar')
+
 def save_checkpoint(epoch, epochs_since_improvement, model, optimizer, loss, is_best, logdir):
     state = {'epoch': epoch,
              'epochs_since_improvement': epochs_since_improvement,
              'loss': loss,
-             'model': model,
-             'optimizer': optimizer,
+             'model': model.state_dict(),
+             'optimizer': optimizer.state_dict(),
              'torch_seed': torch.get_rng_state(),
              'torch_cuda_seed': torch.cuda.get_rng_state(),
              'np_seed': np.random.get_state(),
@@ -45,6 +62,7 @@ def save_checkpoint(epoch, epochs_since_improvement, model, optimizer, loss, is_
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
         torch.save(state, logdir + '/BEST_checkpoint.tar')
+
 
 
 def save_checkpoint_2(epoch, epochs_since_improvement, model, optimizer, loss, is_best):
@@ -156,6 +174,7 @@ def parse_args():
     parser.add_argument('--data-augumentation', type=bool, default=False, help='is augument data or not')
     parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam.')
     parser.add_argument('--beta2', type=float, default=0.999, help='beta2 for adam.')
+    parser.add_argument('--device', type=str, default='cuda')
     args = parser.parse_args()
     return args
 

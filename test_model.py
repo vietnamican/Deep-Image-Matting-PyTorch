@@ -5,8 +5,9 @@ import torch.optim as optim
 from torch.nn import Conv2d, ReLU, BatchNorm2d, Sequential, Sigmoid
 from torchsummaryX import summary
 
-from model import DIMModel
+from model import DIMModel, Model
 
-model = DIMModel()
-x = torch.Tensor(1, 4, 1000, 999)
+model = Model()
+# model = DIMModel()
+x = torch.Tensor(1, 4, 512, 512)
 summary(model, x)
