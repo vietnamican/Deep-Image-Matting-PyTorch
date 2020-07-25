@@ -18,7 +18,7 @@ class DIMModel(nn.Module):
 
         self.down1_conv1 = Block(4, 64, 3, 2, 1, with_depthwise=False)  # 160 32
         self.down1_conv2 = Block(64, 64, 3, 1, 1, with_depthwise=False)  # 160 32
-        self.down1_conv2 = Block(64, 64, 3, 1, 1, with_depthwise=False)  # 160 32
+        self.down1_conv3 = Block(64, 64, 3, 1, 1, with_depthwise=False)  # 160 32
 
         self.short2 = Sequential(
             Block(64, 64, 1, 1, 0), Block(64, 64, 1, 1, 0)
@@ -26,7 +26,7 @@ class DIMModel(nn.Module):
 
         self.down2_conv1 = Block(64, 128, 3, 2, 1, with_depthwise=False)  # 80
         self.down2_conv2 = Block(128, 128, 3, 1, 1, with_depthwise=False)  # 80
-        self.down2_conv2 = Block(128, 128, 3, 1, 1, with_depthwise=False)  # 80
+        self.down2_conv3 = Block(128, 128, 3, 1, 1, with_depthwise=False)  # 80
 
         self.short3 = Sequential(
             Block(128, 128, 1, 1, 0), Block(128, 128, 1, 1, 0)
@@ -54,7 +54,7 @@ class DIMModel(nn.Module):
 
         self.up5_conv1 = UpBlock(2, 1024, 512, 3, 1, 1)  # 20 256
         self.up5_conv2 = Block(512, 512, 3, 1, 1)  # 20 256
-        self.up5_conv2 = Block(512, 512, 3, 1, 1)  # 20 256
+        self.up5_conv3 = Block(512, 512, 3, 1, 1)  # 20 256
 
         self.up4_conv1 = UpBlock(2, 512, 256, 3, 1, 1)  # 40 128
         self.up4_conv2 = Block(256, 256, 3, 1, 1)  # 40 128
@@ -66,11 +66,11 @@ class DIMModel(nn.Module):
 
         self.up2_conv1 = UpBlock(2, 128, 64, 3, 1, 1)  # 160
         self.up2_conv2 = Block(64, 64, 3, 1, 1)  # 160
-        self.up2_conv2 = Block(64, 64, 3, 1, 1)  # 160
+        self.up2_conv3 = Block(64, 64, 3, 1, 1)  # 160
 
         self.up1_conv1 = UpBlock(2, 64, 64, 3, 1, 1, use_transpose_conv=True)  # 320
         self.up1_conv2 = Block(64, 64, 3, 1, 1)  # 320
-        self.up1_conv2 = Block(64, 64, 3, 1, 1)  # 320
+        self.up1_conv3 = Block(64, 64, 3, 1, 1)  # 320
 
         self.lastconv = Sequential(
             Block(64, 128, 3, 1, 1),
@@ -85,11 +85,13 @@ class DIMModel(nn.Module):
 
         x = self.down1_conv1(x)
         x = self.down1_conv2(x)
+        x = self.down1_conv3(x)
 
         s2 = self.short2(x)
 
         x = self.down2_conv1(x)
         x = self.down2_conv2(x)
+        x = self.down2_conv3(x)
 
         s3 = self.short3(x)
 
@@ -111,28 +113,31 @@ class DIMModel(nn.Module):
 
         x = self.up5_conv1(x, s5.shape[2:4])
         x = self.up5_conv2(x)
+        x = self.up5_conv3(x)
 
         x = x + s5
 
         x = self.up4_conv1(x, s4.shape[2:4])
         x = self.up4_conv2(x)
-        x = self.up4_conv2(x)
+        x = self.up4_conv3(x)
 
         x = x + s4
 
         x = self.up3_conv1(x, s3.shape[2:4])
         x = self.up3_conv2(x)
-        x = self.up3_conv2(x)
+        x = self.up3_conv3(x)
 
         x = x + s3
 
         x = self.up2_conv1(x, s2.shape[2:4])
         x = self.up2_conv2(x)
+        x = self.up2_conv3(x)
 
         x = x + s2
 
         x = self.up1_conv1(x, s1.shape[2:4])
         x = self.up1_conv2(x)
+        x = self.up1_conv3(x)
 
         x = x + s1
 
