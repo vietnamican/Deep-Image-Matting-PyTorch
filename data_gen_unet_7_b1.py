@@ -43,18 +43,18 @@ def return_raw_image(dataset):
 
     return dataset_raw
 
-
-fg_dataset = tfrecord_creator.read("fg", "./data/tfrecord/")
-bg_dataset = tfrecord_creator.read("bg", "./data/tfrecord/")
-a_dataset = tfrecord_creator.read("a", "./data/tfrecord/")
-fg_dataset = list(fg_dataset)
-bg_dataset = list(bg_dataset)
-a_dataset = list(a_dataset)
-print("___________________")
-print(len(fg_dataset))
-print(len(bg_dataset))
-print(len(a_dataset))
-print("___________________")
+if args.env == 'local':
+    fg_dataset = tfrecord_creator.read("fg", "./data/tfrecord/")
+    bg_dataset = tfrecord_creator.read("bg", "./data/tfrecord/")
+    a_dataset = tfrecord_creator.read("a", "./data/tfrecord/")
+    fg_dataset = list(fg_dataset)
+    bg_dataset = list(bg_dataset)
+    a_dataset = list(a_dataset)
+    print("___________________")
+    print(len(fg_dataset))
+    print(len(bg_dataset))
+    print(len(a_dataset))
+    print("___________________")
 
 
 # fg_raw = return_raw_image(fg_dataset)

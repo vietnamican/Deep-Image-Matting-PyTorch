@@ -175,6 +175,7 @@ def parse_args():
     parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam.')
     parser.add_argument('--beta2', type=float, default=0.999, help='beta2 for adam.')
     parser.add_argument('--device', type=str, default='cuda')
+    parser.add_argument('--env', type=str, default='local')
     args = parser.parse_args()
     return args
 
