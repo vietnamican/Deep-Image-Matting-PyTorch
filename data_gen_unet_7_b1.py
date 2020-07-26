@@ -43,6 +43,7 @@ def return_raw_image(dataset):
 
     return dataset_raw
 
+
 if args.env == 'local':
     fg_dataset = tfrecord_creator.read("fg", "./data/tfrecord/")
     bg_dataset = tfrecord_creator.read("bg", "./data/tfrecord/")
@@ -185,7 +186,7 @@ class DIMDataset(Dataset):
         img, alpha, fg, bg = process(fcount, bcount)
 
         # crop size 320:640:480 = 1:1:1
-        different_sizes = [(320, 320), (480, 480), (640, 640)]
+        different_sizes = [(512, 512), (768, 768), (1024, 1024)]
         crop_size = random.choice(different_sizes)
 
         trimap = gen_trimap(alpha)
