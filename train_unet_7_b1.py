@@ -5,7 +5,7 @@ from torch import nn
 import random
 
 from config import im_size, grad_clip
-from data_gen_unet_7 import DIMDataset
+from data_gen_unet_7_b1 import DIMDataset
 from model import Model
 from utils import parse_args, save_checkpoint, AverageMeter, clip_gradient, get_logger, get_learning_rate, \
     alpha_prediction_loss, adjust_learning_rate
