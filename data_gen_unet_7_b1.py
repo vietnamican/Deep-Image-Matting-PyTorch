@@ -16,6 +16,9 @@ from utils import safe_crop, parse_args, maybe_random_interp
 global args
 args = parse_args()
 
+if tf.__version__ < '2.0':
+    tf.enable_eager_execution()
+
 # Data augmentation and normalization for training
 # Just normalization for validation
 data_transforms = {
