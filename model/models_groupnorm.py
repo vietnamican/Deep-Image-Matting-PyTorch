@@ -16,41 +16,41 @@ class DIMModel(nn.Module):
             Block(4, 64, 1, 1, 0, with_group_norm=True), Block(64, 64, 1, 1, 0, with_group_norm=True)
         )
 
-        self.down1_conv1 = Block(4, 64, 3, 2, 1, with_depthwise=False, with_group_norm=True)  # 160 32
-        self.down1_conv2 = Block(64, 64, 3, 1, 1, with_depthwise=False, with_group_norm=True)  # 160 32
-        self.down1_conv3 = Block(64, 64, 3, 1, 1, with_depthwise=False, with_group_norm=True)  # 160 32
+        self.down1_conv1 = Block(4, 64, 3, 2, 1, with_depthwise=True, with_group_norm=True)  # 160 32
+        self.down1_conv2 = Block(64, 64, 3, 1, 1, with_depthwise=True, with_group_norm=True)  # 160 32
+        self.down1_conv3 = Block(64, 64, 3, 1, 1, with_depthwise=True, with_group_norm=True)  # 160 32
 
         self.short2 = Sequential(
             Block(64, 64, 1, 1, 0, with_group_norm=True), Block(64, 64, 1, 1, 0, with_group_norm=True)
         )
 
-        self.down2_conv1 = Block(64, 128, 3, 2, 1, with_depthwise=False, with_group_norm=True)  # 80
-        self.down2_conv2 = Block(128, 128, 3, 1, 1, with_depthwise=False, with_group_norm=True)  # 80
-        self.down2_conv3 = Block(128, 128, 3, 1, 1, with_depthwise=False, with_group_norm=True)  # 80
+        self.down2_conv1 = Block(64, 128, 3, 2, 1, with_depthwise=True, with_group_norm=True)  # 80
+        self.down2_conv2 = Block(128, 128, 3, 1, 1, with_depthwise=True, with_group_norm=True)  # 80
+        self.down2_conv3 = Block(128, 128, 3, 1, 1, with_depthwise=True, with_group_norm=True)  # 80
 
         self.short3 = Sequential(
             Block(128, 128, 1, 1, 0, with_group_norm=True), Block(128, 128, 1, 1, 0, with_group_norm=True)
         )
 
-        self.down3_conv1 = Block(128, 256, 3, 2, 1, with_depthwise=False, with_group_norm=True)  # 40
-        self.down3_conv2 = Block(256, 256, 3, 1, 1, with_depthwise=False, with_group_norm=True)  # 40
-        self.down3_conv3 = Block(256, 256, 3, 1, 1, with_depthwise=False, with_group_norm=True)  # 40
+        self.down3_conv1 = Block(128, 256, 3, 2, 1, with_depthwise=True, with_group_norm=True)  # 40
+        self.down3_conv2 = Block(256, 256, 3, 1, 1, with_depthwise=True, with_group_norm=True)  # 40
+        self.down3_conv3 = Block(256, 256, 3, 1, 1, with_depthwise=True, with_group_norm=True)  # 40
 
         self.short4 = Sequential(
             Block(256, 256, 1, 1, 0, with_group_norm=True), Block(256, 256, 1, 1, 0, with_group_norm=True)
         )
 
-        self.down4_conv1 = Block(256, 512, 3, 2, 1, with_depthwise=False, with_group_norm=True)  # 20
-        self.down4_conv2 = Block(512, 512, 3, 1, 1, with_depthwise=False, with_group_norm=True)  # 20
-        self.down4_conv3 = Block(512, 512, 3, 1, 1, with_depthwise=False, with_group_norm=True)  # 20
+        self.down4_conv1 = Block(256, 512, 3, 2, 1, with_depthwise=True, with_group_norm=True)  # 20
+        self.down4_conv2 = Block(512, 512, 3, 1, 1, with_depthwise=True, with_group_norm=True)  # 20
+        self.down4_conv3 = Block(512, 512, 3, 1, 1, with_depthwise=True, with_group_norm=True)  # 20
 
         self.short5 = Sequential(
             Block(512, 512, 1, 1, 0, with_group_norm=True), Block(512, 512, 1, 1, 0, with_group_norm=True)
         )
 
-        self.down5_conv1 = Block(512, 1024, 3, 2, 1, with_group_norm=True)  # 10
-        self.down5_conv2 = Block(1024, 1024, 3, 1, 1, with_group_norm=True)  # 10
-        self.down5_conv3 = Block(1024, 1024, 3, 1, 1, with_group_norm=True)  # 10
+        self.down5_conv1 = Block(512, 1024, 3, 2, 1, with_depthwise=True, with_group_norm=True)  # 10
+        self.down5_conv2 = Block(1024, 1024, 3, 1, 1, with_depthwise=True, with_group_norm=True)  # 10
+        self.down5_conv3 = Block(1024, 1024, 3, 1, 1, with_depthwise=True, with_group_norm=True)  # 10
 
         self.up5_conv1 = UpBlock(2, 1024, 512, 3, 1, 1, with_group_norm=True)  # 20 256
         self.up5_conv2 = Block(512, 512, 3, 1, 1, with_group_norm=True)  # 20 256
