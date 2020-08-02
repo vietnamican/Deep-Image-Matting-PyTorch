@@ -75,7 +75,7 @@ class DIMModel(nn.Module):
         self.lastconv = Sequential(
             Block(64, 128, 3, 1, 1, with_group_norm=True),
             Block(128, 128, 3, 1, 1, with_group_norm=True),
-            Block(128, 1, 1, 1, 0, with_group_norm=True)
+            Block(128, 1, 1, 1, 0)
         )
 
         self.sigmoid = Sigmoid()

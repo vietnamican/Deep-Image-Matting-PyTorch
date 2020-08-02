@@ -40,10 +40,14 @@ class Block(nn.Module):
         self.skip = Depthwise(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=stride,
                               padding=0)
         self.relu = ReLU()
-        if with_group_norm:
-            self.batchnorm = GroupNorm(out_channels)
+        if out_channels == 1:
+            self.with_bn = False
         else:
-            self.batchnorm = BatchNorm2d(out_channels)
+            self.with_bn = True
+            if with_group_norm:
+                self.batchnorm = GroupNorm(out_channels)
+            else:
+                self.batchnorm = BatchNorm2d(out_channels)
 
     def forward(self, x):
         skip = self.skip(x)
@@ -55,7 +59,8 @@ class Block(nn.Module):
         x = x + skip
 
         x = self.relu(x)
-        x = self.batchnorm(x)
+        if self.with_bn:
+            x = self.batchnorm(x)
 
         return x
 
