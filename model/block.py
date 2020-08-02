@@ -7,23 +7,28 @@ from torchsummaryX import summary
 
 from .conv_relu_bn import ConvReluBatchnorm
 from .depthwise import Depthwise
+from .groupnorm import GroupNorm
 
 
 class Block(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, with_depthwise=True,
-                 grow_first=True):
+                 grow_first=True, with_group_norm=False):
         super(Block, self).__init__()
 
         if grow_first:
             self.crb1 = ConvReluBatchnorm(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
-                                          stride=stride, padding=padding, with_depthwise=with_depthwise)
+                                          stride=stride, padding=padding, with_depthwise=with_depthwise,
+                                          with_group_norm=with_group_norm)
             self.crb2 = ConvReluBatchnorm(in_channels=out_channels, out_channels=out_channels, kernel_size=kernel_size,
-                                          stride=1, padding=padding, with_depthwise=with_depthwise)
+                                          stride=1, padding=padding, with_depthwise=with_depthwise,
+                                          with_group_norm=with_group_norm)
         else:
             self.crb1 = ConvReluBatchnorm(in_channels=in_channels, out_channels=in_channels, kernel_size=kernel_size,
-                                          stride=1, padding=padding, with_depthwise=with_depthwise)
+                                          stride=1, padding=padding, with_depthwise=with_depthwise,
+                                          with_group_norm=with_group_norm)
             self.crb2 = ConvReluBatchnorm(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
-                                          stride=1, padding=padding, with_depthwise=with_depthwise)
+                                          stride=1, padding=padding, with_depthwise=with_depthwise,
+                                          with_group_norm=with_group_norm)
 
         if with_depthwise:
             self.conv = Depthwise(in_channels=out_channels, out_channels=out_channels, kernel_size=kernel_size,
@@ -35,7 +40,10 @@ class Block(nn.Module):
         self.skip = Depthwise(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=stride,
                               padding=0)
         self.relu = ReLU()
-        self.batchnorm = BatchNorm2d(out_channels)
+        if with_group_norm:
+            self.batchnorm = GroupNorm(out_channels)
+        else:
+            self.batchnorm = BatchNorm2d(out_channels)
 
     def forward(self, x):
         skip = self.skip(x)
@@ -62,7 +70,7 @@ class Block(nn.Module):
 
 class UpBlock(nn.Module):
     def __init__(self, scale_factor, in_channels, out_channels, kernel_size=3, stride=1, padding=1, with_depthwise=True,
-                 grow_first=True, use_transpose_conv=False):
+                 grow_first=True, use_transpose_conv=False, with_group_norm=False):
         super(UpBlock, self).__init__()
         if use_transpose_conv:
             self.up = ConvTranspose2d(in_channels, in_channels, kernel_size=2, stride=2)
@@ -70,7 +78,8 @@ class UpBlock(nn.Module):
             self.up = UpsamplingNearest2d(scale_factor=scale_factor)
 
         self.block = Block(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride,
-                           padding=padding, with_depthwise=with_depthwise, grow_first=grow_first)
+                           padding=padding, with_depthwise=with_depthwise, grow_first=grow_first,
+                           with_group_norm=with_group_norm)
 
     def forward(self, x, size):
         x = self.up(x)

@@ -5,12 +5,15 @@ import torch.optim as optim
 from torch.nn import Conv2d, ReLU, BatchNorm2d
 from torchsummaryX import summary
 from .depthwise import Depthwise
+from .groupnorm import GroupNorm
 
 
 class ConvReluBatchnorm(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1, dilation=1, bias=True,
                  with_batchnorm=True,
-                 with_relu=True, with_depthwise=False):
+                 with_relu=True,
+                 with_depthwise=False,
+                 with_group_norm=False):
         super(ConvReluBatchnorm, self).__init__()
         if with_depthwise:
             self.conv = Depthwise(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
@@ -26,8 +29,12 @@ class ConvReluBatchnorm(nn.Module):
 
         self.with_batchnorm = False
         if with_batchnorm:
-            self.with_batchnorm = True
-            self.batchnorm = BatchNorm2d(out_channels)
+            if with_group_norm:
+                self.with_group_norm = True
+                self.batchnorm = GroupNorm(out_channels)
+            else:
+                self.with_batchnorm = True
+                self.batchnorm = BatchNorm2d(out_channels)
 
         self._init_weight()
 
